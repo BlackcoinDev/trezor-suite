@@ -1,4 +1,4 @@
-name: Add to GitHub Project
+name: "[Bot] add to GitHub Project"
 
 on: [issues, pull_request]
 
@@ -9,8 +9,8 @@ permissions:
   repository-projects: write
 
 jobs:
-  add-to-beta-project:
-    name: Add new issue to the beta Issues Suite project
+  add-to-project:
+    name: Add new issue to the Issues Suite project
     runs-on: ubuntu-latest
     steps:
       - uses: actions/add-to-project@661f5254e8fcead08b054f5bc07b4d7f2af92c44
@@ -19,8 +19,8 @@ jobs:
           project-url: https://github.com/orgs/trezor/projects/58
           github-token: ${{ secrets.TREZOR_BOT_TOKEN }}
 
-  add-to-beta-project-suite-pull-requests:
-    name: Add new pull request to the Pull Requests project board
+  add-to-project-suite-pull-requests:
+    name: Add new pull request to the Pull Requests project
     runs-on: ubuntu-latest
     steps:
       - uses: actions/add-to-project@661f5254e8fcead08b054f5bc07b4d7f2af92c44
