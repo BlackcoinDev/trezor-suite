@@ -14,6 +14,7 @@ const FiatSelect = () => {
             control={control}
             name={FIAT_CURRENCY}
             defaultValue={defaultCurrency}
+            data-test="@coinmarket/exchange/fiat-select"
             render={({ onChange, value }) => (
                 <Select
                     onChange={(selected: any) => {

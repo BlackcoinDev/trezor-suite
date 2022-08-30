@@ -127,6 +127,7 @@ const ReceiveCryptoSelect = () => {
                             exchangeInfo,
                             tokenData?.symbol,
                         )}
+                        data-test="@CoinmarketExchangeReceiveCryptoSelect"
                         minWidth="70px"
                         formatOptionLabel={(option: any) => (
                             <Option>

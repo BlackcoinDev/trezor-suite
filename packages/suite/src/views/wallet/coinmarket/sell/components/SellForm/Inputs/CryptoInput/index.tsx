@@ -169,6 +169,7 @@ const CryptoInput = ({ activeInput, setActiveInput }: Props) => {
 
     return (
         <Input
+            data-test="@coinmarket/sell/crypto-input"
             onFocus={() => {
                 setActiveInput(CRYPTO_INPUT);
             }}
@@ -235,6 +236,7 @@ const CryptoInput = ({ activeInput, setActiveInput }: Props) => {
                                     <Label>{areSatsUsed ? 'sat' : option.label}</Label>
                                 </Option>
                             )}
+                            data-test="@coinmarket/sell/crypto-currency-select"
                         />
                     )}
                 />

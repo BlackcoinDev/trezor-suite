@@ -1,0 +1,8 @@
+{
+    "status": "SUCCESS",
+    "receiveTxHash": "string",
+    "rate": 0,
+    "receiveAmount": 0,
+    "receiveStringAmount": "string",
+    "error": "string"
+}

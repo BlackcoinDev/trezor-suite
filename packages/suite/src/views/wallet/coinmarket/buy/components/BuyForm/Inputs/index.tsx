@@ -244,6 +244,7 @@ const Inputs = () => {
                     name={fiatInput}
                     maxLength={MAX_LENGTH.AMOUNT}
                     bottomText={<InputError error={errors[fiatInput]} />}
+                    data-test="@coinmarket/buy/fiat-input"
                     innerAddon={
                         <Controller
                             control={control}
@@ -264,11 +265,11 @@ const Inputs = () => {
                                         onChange(selected);
                                         setAmountLimits(undefined);
                                     }}
+                                    data-test="@coinmarket/buy/fiat-currency-select"
                                 />
                             )}
                         />
                     }
-                    data-test="@coinmarket/buy/fiat-input"
                 />
             </Left>
             <Middle responsiveSize="LG">
@@ -329,6 +330,7 @@ const Inputs = () => {
                                     hideTextCursor
                                     isDisabled={account.networkType !== 'ethereum'}
                                     minWidth="100px"
+                                    data-test="@coinmarket/buy/crypto-currency-select"
                                 />
                             )}
                         />

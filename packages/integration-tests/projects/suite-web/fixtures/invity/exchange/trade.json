@@ -1,0 +1,17 @@
+{
+    "send": "REG",
+    "sendStringAmount": "0.00186480",
+    "sendAddress": "bc1qn9555wdkxgvj7xhw45x4ale5syc0xqsjuamx65",
+    "receive": "ETH",
+    "receiveStringAmount": "0.023813140406586572267856",
+    "receiveAddress": "0x8185b57ac7ee339245dd2c06Bdd056Aec2844d4D",
+    "rate": 12.769809312841362,
+    "min": 0.0018,
+    "max": 5,
+    "fee": "INCLUDED",
+    "orderId": "rbflttdfuhnigd9ivd",
+    "statusUrl": "https://changehero.io/transaction/rbflttdfuhnigd9ivd",
+    "status": "CONFIRM",
+    "rateIdentificator": "e4a2dc4b-6e8e-41c5-b06d-0a5fa5f0cbbe",
+    "exchange": "changeherofr"
+}

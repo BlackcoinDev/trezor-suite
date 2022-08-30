@@ -9,7 +9,11 @@
         ],
         "noEmit": true
     },
-    "include": ["**/*.ts", "**/*.js"],
+    "include": [
+        "**/*.ts",
+        "**/*.js",
+        "**/*.json"
+    ],
     "references": [
         {
             "path": "../../suite-common/test-utils"
