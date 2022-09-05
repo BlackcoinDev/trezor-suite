@@ -3,7 +3,10 @@
 describe('Coinmarket exchange', () => {
     beforeEach(() => {
         cy.task('startEmu', { wipe: true });
-        cy.task('setupEmu', { needs_backup: false });
+        cy.task('setupEmu', {
+            needs_backup: false,
+            mnemonic: 'all all all all all all all all all all all all',
+        });
         cy.task('startBridge');
 
         cy.viewport(1024, 768).resetDb();
@@ -31,11 +34,14 @@ describe('Coinmarket exchange', () => {
         cy.getTestElement('@coinmarket/exchange/fiat-input').should('have.value', '');
 
         // Tests crypto input contains REGTEST
-        cy.getTestElement('@coinmarket/exchange/crypto-input').should('contain.text', 'REGTEST');
+        cy.getTestElement('@coinmarket/exchange/crypto-currency-select/input').should(
+            'contain.text',
+            'REGTEST',
+        );
 
         // Fills out 0.005REGTEST and chooses ETH as target crypto */
         cy.getTestElement('@coinmarket/exchange/crypto-input').type('0.005');
-        cy.getTestElement('@coinmarket/exchange/fiat-select').click();
+        cy.getTestElement('@coinmarket/exchange/fiat-select').click(); // Fix this selector
         // Needs to pick ETH from the dropdown menu
 
         // Custom fee setup
@@ -45,14 +51,14 @@ describe('Coinmarket exchange', () => {
         cy.getTestElement('@coinmarket/exchange/compare-button').click();
 
         // Tests offer accordance with the mocks
-        cy.contains('changehero').should('exist');
+        cy.contains('changehero').should('exist'); // Add more specific checks, add offered sums
         cy.contains('changelly').should('exist');
         cy.contains('changenowfr').should('exist');
 
         // Gets the deal
         cy.getTestElement('@coinmarket/exchange/offers/get-this-deal-button').eq(2).click();
         cy.getTestElement('@modal').should('be.visible');
-        cy.getTestElement('@coinmarket/exchange/offers/buy-terms-agree-checkbox').click();
+        cy.getTestElement('@coinmarket/exchange/offers/buy-terms-agree-checkbox').click(); // Add visibility tests
         cy.getTestElement('@coinmarket/exchange/offers/buy-terms-confirm-button').click();
         cy.getTestElement('@coinmarket/exchange/offers/confirm-on-trezor-button').click();
         cy.getConfirmActionOnDeviceModal();
