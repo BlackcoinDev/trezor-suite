@@ -30,7 +30,7 @@ describe('Coinmarket exchange', () => {
 
     it('Should exchange crypto successfully', () => {
         // Tests all input windows are empty
-        cy.getTestElement('@coinmarket/exchange/crypto-input').should('have.value', ''); // shoulds have issues in all instances
+        cy.getTestElement('@coinmarket/exchange/crypto-input').should('have.value', '');
         cy.getTestElement('@coinmarket/exchange/fiat-input').should('have.value', '');
 
         // Tests crypto input contains REGTEST
@@ -41,8 +41,7 @@ describe('Coinmarket exchange', () => {
 
         // Fills out 0.005REGTEST and chooses ETH as target crypto */
         cy.getTestElement('@coinmarket/exchange/crypto-input').type('0.005');
-        cy.getTestElement('@coinmarket/exchange/fiat-select').click(); // Fix this selector
-        // Needs to pick ETH from the dropdown menu
+        cy.getTestElement('@coinmarket/exchange/receive-crypto-select').type('ETH{enter}');
 
         // Custom fee setup
         cy.getTestElement('select-bar/custom').click();
