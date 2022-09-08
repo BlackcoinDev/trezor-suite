@@ -5,11 +5,12 @@ describe('Coinmarket exchange', () => {
         cy.task('startEmu', { wipe: true });
         cy.task('setupEmu', {
             needs_backup: false,
-            mnemonic: 'all all all all all all all all all all all all',
+            mnemonic:
+                'alcohol woman abuse must during monitor noble actual mixed trade anger aisle',
         });
         cy.task('startBridge');
 
-        cy.viewport(1024, 768).resetDb();
+        cy.viewport(1080, 1440).resetDb();
         cy.interceptInvityApi();
         cy.prefixedVisit('/');
         cy.passThroughInitialRun();
@@ -17,7 +18,7 @@ describe('Coinmarket exchange', () => {
         cy.enableRegtestAndGetCoins({
             payments: [
                 {
-                    address: 'bcrt1qkvwu9g3k2pdxewfqr7syz89r3gj557l374sg5v',
+                    address: 'bcrt1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvyg6q7g5r',
                     amount: 1,
                 },
             ],
@@ -29,6 +30,7 @@ describe('Coinmarket exchange', () => {
     });
 
     it('Should exchange crypto successfully', () => {
+        cy.discoveryShouldFinish();
         // Tests all input windows are empty
         cy.getTestElement('@coinmarket/exchange/crypto-input').should('have.value', '');
         cy.getTestElement('@coinmarket/exchange/fiat-input').should('have.value', '');
@@ -41,7 +43,7 @@ describe('Coinmarket exchange', () => {
 
         // Fills out 0.005REGTEST and chooses ETH as target crypto */
         cy.getTestElement('@coinmarket/exchange/crypto-input').type('0.005');
-        cy.getTestElement('@coinmarket/exchange/receive-crypto-select').type('ETH{enter}');
+        cy.getTestElement('@coinmarket/exchange/receive-crypto-select/input').type('ETH{enter}');
 
         // Custom fee setup
         cy.getTestElement('select-bar/custom').click();
@@ -49,32 +51,40 @@ describe('Coinmarket exchange', () => {
         // cy.getTestElement('@CoinmarketExchangeReceiveCryptoSelect').click();
         cy.getTestElement('@coinmarket/exchange/compare-button').click();
 
-        // Tests offer accordance with the mocks
-        cy.contains('changehero').should('exist'); // Add more specific checks, add offered sums
-        cy.contains('changelly').should('exist');
-        cy.contains('changenowfr').should('exist');
+        cy.fixture('./invity/exchange/quotes').then(quotes => {
+            // Tests offer accordance with the mocks
+            const valueFromFixtures = quotes.find(quote => quote.exchange === 'changehero');
+            cy.contains('[class*="Quote__Wrapper"]', 'changehero', { matchCase: false })
+                .should('exist')
+                .find('[class*="CryptoAmount__Value"]') // returns element handle
+                .invoke('text') // returns text value
+                .should('eq', valueFromFixtures.receiveStringAmount); // compares read value against the test data one
+        });
 
-        // Gets the deal
-        cy.getTestElement('@coinmarket/exchange/offers/get-this-deal-button').eq(2).click();
-        cy.getTestElement('@modal').should('be.visible');
-        cy.getTestElement('@coinmarket/exchange/offers/buy-terms-agree-checkbox').click(); // Add visibility tests
-        cy.getTestElement('@coinmarket/exchange/offers/buy-terms-confirm-button').click();
-        cy.getTestElement('@coinmarket/exchange/offers/confirm-on-trezor-button').click();
-        cy.getConfirmActionOnDeviceModal();
-        cy.task('pressYes');
+        // cy.contains('changelly').should('exist');
+        // cy.contains('changenowfr').should('exist');
 
-        //
-        cy.getTestElement('@CoinmarketExchangeOfferInfo').should('have.value', '0.00500000 BTC');
-        cy.get('CoinmarketExchangeOfferInfo').should('have.value', '0.063230 ETH'); // Copying Kuba's syntax from buy test
-        cy.getTestElement('@CoinmarketExchangeProviderInfo').should('have.value', 'Changelly');
-        cy.get('AddressOptions').should('have.value', '0x8185b57ac7ee339245dd2c06Bdd056Aec2844d4D');
+        // // Gets the deal
+        // cy.getTestElement('@coinmarket/exchange/offers/get-this-deal-button').eq(2).click();
+        // cy.getTestElement('@modal').should('be.visible');
+        // cy.getTestElement('@coinmarket/exchange/offers/buy-terms-agree-checkbox').click(); // Add visibility tests
+        // cy.getTestElement('@coinmarket/exchange/offers/buy-terms-confirm-button').click();
+        // cy.getTestElement('@coinmarket/exchange/offers/confirm-on-trezor-button').click();
+        // cy.getConfirmActionOnDeviceModal();
+        // cy.task('pressYes');
 
-        cy.getTestElement('@coinmarket/exchange/offers/finish-transaction-button').click();
-        cy.getTestElement('@ConfirmOnTrezorAndSend').click(); // Data test id in progress
-        cy.getConfirmActionOnDeviceModal(); // This might be the wrong command for Trezor, WIP
-        // Verification of REG and ETH amounts
-        // Hold to confirm on Trezor command
-        // Press Send in suite
+        // //
+        // cy.getTestElement('@CoinmarketExchangeOfferInfo').should('have.value', '0.00500000 BTC');
+        // cy.get('CoinmarketExchangeOfferInfo').should('have.value', '0.063230 ETH'); // Copying Kuba's syntax from buy test
+        // cy.getTestElement('@CoinmarketExchangeProviderInfo').should('have.value', 'Changelly');
+        // cy.get('AddressOptions').should('have.value', '0x8185b57ac7ee339245dd2c06Bdd056Aec2844d4D');
+
+        // cy.getTestElement('@coinmarket/exchange/offers/finish-transaction-button').click();
+        // cy.getTestElement('@ConfirmOnTrezorAndSend').click(); // Data test id in progress
+        // cy.getConfirmActionOnDeviceModal(); // This might be the wrong command for Trezor, WIP
+        // // Verification of REG and ETH amounts
+        // // Hold to confirm on Trezor command
+        // // Press Send in suite
 
         // Pending watch success mock, need help here
     });
