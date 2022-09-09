@@ -51,14 +51,30 @@ describe('Coinmarket exchange', () => {
         // cy.getTestElement('@CoinmarketExchangeReceiveCryptoSelect').click();
         cy.getTestElement('@coinmarket/exchange/compare-button').click();
 
-        cy.fixture('./invity/exchange/quotes').then(quotes => {
-            // Tests offer accordance with the mocks
-            const valueFromFixtures = quotes.find(quote => quote.exchange === 'changehero');
-            cy.contains('[class*="Quote__Wrapper"]', 'changehero', { matchCase: false })
-                .should('exist')
-                .find('[class*="CryptoAmount__Value"]') // returns element handle
-                .invoke('text') // returns text value
-                .should('eq', valueFromFixtures.receiveStringAmount); // compares read value against the test data one
+        cy.fixture('./invity/exchange/quotes').then((quotes: any) => {
+            const exchangeProvider = [
+                ['changehero', 'changehero'],
+                ['changenow', 'changenowfr'],
+                ['changelly', 'changelly'],
+            ];
+
+            exchangeProvider.forEach((provider: string[]) => {
+                // Tests offer accordance with the mocks
+                const valueFromFixtures = quotes.find(
+                    (quote: any) => quote.exchange === provider[1],
+                );
+                cy.contains('[class*="Quote__Wrapper"]', provider[0], { matchCase: false })
+                    .should('exist')
+                    .find('[class*="CryptoAmount__Value"]') // returns element handle
+                    .invoke('text')
+                    .then((readValue: string) => {
+                        const ethValueFromApp: number = parseFloat(readValue);
+                        const ethValueFromQuote: number = parseFloat(
+                            valueFromFixtures.receiveStringAmount,
+                        );
+                        expect(ethValueFromApp).to.be.eq(ethValueFromQuote);
+                    });
+            });
         });
 
         // cy.contains('changelly').should('exist');
