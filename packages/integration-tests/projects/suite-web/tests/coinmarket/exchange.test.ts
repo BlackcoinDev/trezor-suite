@@ -23,6 +23,14 @@ describe('Coinmarket exchange', () => {
                 },
             ],
         });
+
+        // Enables ETH account
+        cy.getTestElement('@suite/menu/settings').click();
+        cy.getTestElement('@settings/menu/wallet').click();
+        cy.getTestElement('@settings/wallet/network/eth').click();
+        cy.getTestElement('@settings/menu/close').click();
+
+        // Goes to Exchange
         cy.getTestElement('@suite/menu/wallet-index').click();
         cy.getTestElement('@account-menu/regtest/normal/0/label').click();
         cy.getTestElement('@wallet/menu/wallet-coinmarket-buy').click();
@@ -31,6 +39,7 @@ describe('Coinmarket exchange', () => {
 
     it('Should exchange crypto successfully', () => {
         cy.discoveryShouldFinish();
+
         // Tests all input windows are empty
         cy.getTestElement('@coinmarket/exchange/crypto-input').should('have.value', '');
         cy.getTestElement('@coinmarket/exchange/fiat-input').should('have.value', '');
@@ -48,13 +57,13 @@ describe('Coinmarket exchange', () => {
         // Custom fee setup
         cy.getTestElement('select-bar/custom').click();
         cy.getTestElement('feePerUnit').clear().type('1');
-        // cy.getTestElement('@CoinmarketExchangeReceiveCryptoSelect').click();
         cy.getTestElement('@coinmarket/exchange/compare-button').click();
 
+        // Verifies the offers displayed match the mock
         cy.fixture('./invity/exchange/quotes').then((quotes: any) => {
             const exchangeProvider = [
                 ['changehero', 'changehero'],
-                ['changenow', 'changenowfr'],
+                ['changenow', 'changenow'],
                 ['changelly', 'changelly'],
             ];
 
@@ -65,7 +74,7 @@ describe('Coinmarket exchange', () => {
                 );
                 cy.contains('[class*="Quote__Wrapper"]', provider[0], { matchCase: false })
                     .should('exist')
-                    .find('[class*="CryptoAmount__Value"]') // returns element handle
+                    .find('[class*="CryptoAmount__Value"]') // Returns element handle
                     .invoke('text')
                     .then((readValue: string) => {
                         const ethValueFromApp: number = parseFloat(readValue);
@@ -77,34 +86,93 @@ describe('Coinmarket exchange', () => {
             });
         });
 
-        // cy.contains('changelly').should('exist');
-        // cy.contains('changenowfr').should('exist');
+        // Gets the deal
+        cy.getTestElement('@coinmarket/exchange/offers/get-this-deal-button').eq(0).click();
+        cy.getTestElement('@modal').should('be.visible');
+        cy.getTestElement('@coinmarket/exchange/offers/buy-terms-agree-checkbox').click();
+        cy.getTestElement('@coinmarket/exchange/offers/buy-terms-confirm-button').click();
 
-        // // Gets the deal
-        // cy.getTestElement('@coinmarket/exchange/offers/get-this-deal-button').eq(2).click();
-        // cy.getTestElement('@modal').should('be.visible');
-        // cy.getTestElement('@coinmarket/exchange/offers/buy-terms-agree-checkbox').click(); // Add visibility tests
-        // cy.getTestElement('@coinmarket/exchange/offers/buy-terms-confirm-button').click();
-        // cy.getTestElement('@coinmarket/exchange/offers/confirm-on-trezor-button').click();
-        // cy.getConfirmActionOnDeviceModal();
-        // cy.task('pressYes');
+        // Verifies amounts, currencies and providers
+        cy.get('[class*="CoinmarketExchangeOfferInfo__Wrapper"]')
+            .should('exist')
+            .then(wrapper => {
+                cy.wrap(wrapper)
+                    .find('[class*="FormattedCryptoAmount__Value"]')
+                    .first()
+                    .invoke('text')
+                    .should('be.equal', '0.005');
+                cy.wrap(wrapper)
+                    .find('[class*="FormattedCryptoAmount__Value"]')
+                    .eq(1)
+                    .invoke('text')
+                    .should('be.equal', '0.053845');
+                // cy.wrap(wrapper)
+                //     .find('[class*="FormattedCryptoAmount__Symbol"]')
+                //     .first()
+                //     .should('contain.text', ' REG'); // ' REG' doesn't equal ' REG'
+                // cy.wrap(wrapper)
+                //     .find('[class*="FormattedCryptoAmount__Symbol"]')
+                //     .last()
+                //     .should('contain.text', ' ETH'); // ' ETH' doesn't equal ' ETH'
+                cy.wrap(wrapper)
+                    .find('[class*="CoinmarketProviderInfo__Text"]')
+                    .invoke('text')
+                    .should('be.equal', 'ChangeHero');
+            });
 
-        // //
-        // cy.getTestElement('@CoinmarketExchangeOfferInfo').should('have.value', '0.00500000 BTC');
-        // cy.get('CoinmarketExchangeOfferInfo').should('have.value', '0.063230 ETH'); // Copying Kuba's syntax from buy test
-        // cy.getTestElement('@CoinmarketExchangeProviderInfo').should('have.value', 'Changelly');
-        // cy.get('AddressOptions').should('have.value', '0x8185b57ac7ee339245dd2c06Bdd056Aec2844d4D');
+        // Verifies receiving address and its title
+        cy.get('[class*="VerifyAddress__Wrapper"]')
+            .should('exist')
+            .then(wrapper => {
+                cy.wrap(wrapper)
+                    .find('[class*="AccountLabeling__TabularNums"]')
+                    .invoke('text')
+                    .should('be.equal', 'Ethereum #1');
+                cy.wrap(wrapper)
+                    .find('[class*="Input__StyledInput"]')
+                    .should('have.value', '0x3f2329C9ADFbcCd9A84f52c906E936A42dA18CB8');
+            });
 
-        // cy.getTestElement('@coinmarket/exchange/offers/finish-transaction-button').click();
-        // cy.getTestElement('@ConfirmOnTrezorAndSend').click(); // Data test id in progress
-        // cy.getConfirmActionOnDeviceModal(); // This might be the wrong command for Trezor, WIP
-        // // Verification of REG and ETH amounts
-        // // Hold to confirm on Trezor command
-        // // Press Send in suite
+        // Confirming the transaction
+        cy.getTestElement('@coinmarket/exchange/offers/confirm-on-trezor-button').click();
+        cy.task('pressYes'); // This ain't work
+        cy.getTestElement('@coinmarket/exchange/offers/continue-transaction-button').click();
+        cy.getTestElement('@coinmarket/exchange/offers/confirm-on-trezor-and-send').click();
 
-        // Pending watch success mock, need help here
+        // Verification modal opens
+        cy.task('pressYes');
+        // Hold to confirm - this doesn't exist in the list of emulator commands
+        cy.get('[class*="OutputElement__OutputWrapper"]')
+            .should('exist')
+            .then(wrapper => {
+                cy.wrap(wrapper)
+                    .find('[class*="OutputElement__OutputHeadline"]')
+                    .first()
+                    .invoke('text')
+                    .should('be.equal', 'bc1ql3jyy6n3ugrzla3ndwg2c33dqsv4u75zaa8cyk');
+                cy.wrap(wrapper)
+                    .find('[class*="FormattedCryptoAmount__Value"]')
+                    .first()
+                    .invoke('text')
+                    .should('be.equal', '0.005');
+                // cy.wrap(wrapper)
+                //     .find('[class*="FormattedCryptoAmount__Symbol"]')
+                //     .first()
+                //     .should('contain.text', ' REG'); // ' REG' doesn't equal ' REG'
+            });
+        cy.get('[class*="Summary__Wrapper"]')
+            .should('exist')
+            .then(wrapper => {
+                cy.wrap(wrapper)
+                    .find('[class*="Summary__ReviewRbfLeftDetailsLineRight"]')
+                    .invoke('text')
+                    .should('be.equal', '1 sat/B');
+            });
+
+        cy.contains('Send').click(); // I can't find the modal with the button to add the data-test-id there
+
+        // Pending watch success mock
     });
-
     /* it("Should remember form's values as a draft", () => {
         cy.getTestElement('@suite/menu/wallet-index').click();
         cy.getTestElement('@wallet/menu/wallet-coinmarket-buy').click();
@@ -114,15 +182,11 @@ describe('Coinmarket exchange', () => {
         cy.getTestElement('@coinmarket/exchange/fiat-input').type('1000');
         cy.prefixedVisit('/accounts');
         cy.getTestElement('@coinmarket/exchange/fiat-input').should('have.value', '1000');
-
-        // TODO: rest of inputs
     });
 
     it('Should clear form draft', () => {
         cy.getTestElement('@coinmarket/exchange/fiat-input').type('1000');
         cy.getTestElement('(clear form button id)').click();
         cy.getTestElement('@coinmarket/exchange/fiat-input').should('have.value', '');
-
-        // TODO: fill and reset rest of inputs
     }); */
 });

@@ -292,7 +292,7 @@ const VerifyAddressComponent = () => {
                     {((addressVerified && addressVerified === address) ||
                         selectedAccountOption?.type === 'NON_SUITE') && (
                         <Button
-                            data-test="@coinmarket/exchange/offers/finish-transaction-button"
+                            data-test="@coinmarket/exchange/offers/continue-transaction-button"
                             isLoading={callInProgress}
                             onClick={() => {
                                 if (address) {

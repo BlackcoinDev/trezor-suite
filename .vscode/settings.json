@@ -4,7 +4,23 @@
     },
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "typescript.reportStyleChecksAsWarnings": false,
-    "cSpell.words": ["blockbook", "bootloader", "webworkers"],
+    "cSpell.words": [
+        "blockbook",
+        "bootloader",
+        "changehero",
+        "changelly",
+        "Changelly",
+        "changenow",
+        "coinmarket",
+        "Coinmarket",
+        "invity",
+        "Invity",
+        "Kuba's",
+        "regtest",
+        "Regtest",
+        "REGTEST",
+        "webworkers"
+    ],
     "editor.formatOnSave": true,
     "[html]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -32,5 +48,6 @@
     },
     "[dockerfile]": {
         "editor.defaultFormatter": "ms-azuretools.vscode-docker"
-    }
+    },
+    "cSpell.ignoreWords": ["3ugrzla3ndwg2c33dqsv4"]
 }
