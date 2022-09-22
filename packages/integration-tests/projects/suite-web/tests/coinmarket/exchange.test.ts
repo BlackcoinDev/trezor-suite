@@ -39,7 +39,6 @@ describe('Coinmarket exchange', () => {
 
     it('Should exchange crypto successfully', () => {
         cy.discoveryShouldFinish();
-
         // Tests all input windows are empty
         cy.getTestElement('@coinmarket/exchange/crypto-input').should('have.value', '');
         cy.getTestElement('@coinmarket/exchange/fiat-input').should('have.value', '');
@@ -106,14 +105,14 @@ describe('Coinmarket exchange', () => {
                     .eq(1)
                     .invoke('text')
                     .should('be.equal', '0.053845');
-                // cy.wrap(wrapper)
-                //     .find('[class*="FormattedCryptoAmount__Symbol"]')
-                //     .first()
-                //     .should('contain.text', ' REG'); // ' REG' doesn't equal ' REG'
-                // cy.wrap(wrapper)
-                //     .find('[class*="FormattedCryptoAmount__Symbol"]')
-                //     .last()
-                //     .should('contain.text', ' ETH'); // ' ETH' doesn't equal ' ETH'
+                cy.wrap(wrapper)
+                    .find('[class*="FormattedCryptoAmount__Symbol"]')
+                    .first()
+                    .should('contain.text', 'REGTEST');
+                cy.wrap(wrapper)
+                    .find('[class*="FormattedCryptoAmount__Symbol"]')
+                    .last()
+                    .should('contain.text', 'ETH');
                 cy.wrap(wrapper)
                     .find('[class*="CoinmarketProviderInfo__Text"]')
                     .invoke('text')
@@ -135,13 +134,12 @@ describe('Coinmarket exchange', () => {
 
         // Confirming the transaction
         cy.getTestElement('@coinmarket/exchange/offers/confirm-on-trezor-button').click();
-        cy.task('pressYes'); // This ain't work
+        cy.getTestElement('@prompts/confirm-on-device');
+        cy.task('pressYes');
         cy.getTestElement('@coinmarket/exchange/offers/continue-transaction-button').click();
         cy.getTestElement('@coinmarket/exchange/offers/confirm-on-trezor-and-send').click();
 
         // Verification modal opens
-        cy.task('pressYes');
-        // Hold to confirm - this doesn't exist in the list of emulator commands
         cy.get('[class*="OutputElement__OutputWrapper"]')
             .should('exist')
             .then(wrapper => {
@@ -149,29 +147,30 @@ describe('Coinmarket exchange', () => {
                     .find('[class*="OutputElement__OutputHeadline"]')
                     .first()
                     .invoke('text')
-                    .should('be.equal', 'bc1ql3jyy6n3ugrzla3ndwg2c33dqsv4u75zaa8cyk');
+                    .should('be.equal', '2N4dH9yn4eYnnjHTYpN9xDmuMRS2k1AHWd8... ');
                 cy.wrap(wrapper)
                     .find('[class*="FormattedCryptoAmount__Value"]')
                     .first()
                     .invoke('text')
                     .should('be.equal', '0.005');
-                // cy.wrap(wrapper)
-                //     .find('[class*="FormattedCryptoAmount__Symbol"]')
-                //     .first()
-                //     .should('contain.text', ' REG'); // ' REG' doesn't equal ' REG'
+                cy.wrap(wrapper)
+                    .find('[class*="FormattedCryptoAmount__Symbol"]')
+                    .first()
+                    .should('contain.text', 'REGTEST');
             });
         cy.get('[class*="Summary__Wrapper"]')
             .should('exist')
             .then(wrapper => {
                 cy.wrap(wrapper)
                     .find('[class*="Summary__ReviewRbfLeftDetailsLineRight"]')
+                    .eq(0)
                     .invoke('text')
                     .should('be.equal', '1 sat/B');
             });
-
-        cy.contains('Send').click(); // I can't find the modal with the button to add the data-test-id there
-
-        // Pending watch success mock
+        cy.task('pressYes');
+        cy.task('pressYes');
+        cy.contains('Send').click();
+        // Verifies a banner displays
     });
     /* it("Should remember form's values as a draft", () => {
         cy.getTestElement('@suite/menu/wallet-index').click();

@@ -1,7 +1,7 @@
 {
-    "send": "REG",
+    "send": "REGTEST",
     "sendStringAmount": "0.005",
-    "sendAddress": "bc1qn9555wdkxgvj7xhw45x4ale5syc0xqsjuamx65",
+    "sendAddress": "2N4dH9yn4eYnnjHTYpN9xDmuMRS2k1AHWd8",
     "receive": "ETH",
     "receiveStringAmount": "0.053845",
     "receiveAddress": "0x8185b57ac7ee339245dd2c06Bdd056Aec2844d4D",

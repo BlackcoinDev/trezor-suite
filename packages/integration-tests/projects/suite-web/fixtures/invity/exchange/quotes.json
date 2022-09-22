@@ -1,6 +1,6 @@
 [
     {
-        "send": "REG",
+        "send": "REGTEST",
         "sendStringAmount": "0.005",
         "receive": "ETH",
         "receiveStringAmount": "0.053845",
@@ -11,7 +11,7 @@
         "exchange": "changehero"
     },
     {
-        "send": "REG",
+        "send": "REGTEST",
         "sendStringAmount": "0.005",
         "receive": "ETH",
         "receiveStringAmount": "0.062824",
@@ -23,7 +23,7 @@
         "exchange": "changenow"
     },
     {
-        "send": "REG",
+        "send": "REGTEST",
         "sendStringAmount": "0.005",
         "receive": "ETH",
         "receiveStringAmount": "0.063230",
