@@ -169,8 +169,9 @@ describe('Coinmarket exchange', () => {
             });
         cy.task('pressYes');
         cy.task('pressYes');
-        cy.contains('Send').click();
+        cy.contains('Send').click(); // Need to add data-test-id to "Send" button
         // Verifies a banner displays
+        // cy.getTestElement('@banner-data-test-id').should('be.visible);
     });
     /* it("Should remember form's values as a draft", () => {
         cy.getTestElement('@suite/menu/wallet-index').click();
