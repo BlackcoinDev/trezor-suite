@@ -167,9 +167,11 @@ describe('Coinmarket exchange', () => {
                     .invoke('text')
                     .should('be.equal', '1 sat/B');
             });
+
         cy.task('pressYes');
         cy.task('pressYes');
-        cy.contains('Send').click(); // Need to add data-test-id to "Send" button
+        cy.wait(1000);
+        cy.getTestElement('@modal/send').should('not.be.disabled').click();
         // Verifies a banner displays
         // cy.getTestElement('@banner-data-test-id').should('be.visible);
     });
