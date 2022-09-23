@@ -2,7 +2,7 @@
 
 echo "Waiting for $1 to load up..."
 counter=0
-max_attempts=60
+max_attempts=120
 
 curl -i -s -I "$1"
 
