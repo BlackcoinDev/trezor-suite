@@ -8,6 +8,7 @@ import { CoinjoinBackendService } from '@suite/services/coinjoin/coinjoinBackend
 import { CoinjoinClientService } from '@suite/services/coinjoin/coinjoinClient';
 import { Dispatch, GetState } from '@suite-types';
 import { Network } from '@suite-common/wallet-config';
+import { sanitizeAccount } from '@wallet-utils/coinjoinUtils';
 import { Account, CoinjoinSessionParameters } from '@suite-common/wallet-types';
 import { accountsActions, transactionsActions } from '@suite-common/wallet-core';
 import { isAccountOutdated, getAccountTransactions } from '@suite-common/wallet-utils';
@@ -36,6 +37,13 @@ const coinjoinAccountUpdateAnonymity = (accountKey: string, targetAnonymity: num
             accountKey,
             targetAnonymity,
         },
+    } as const);
+
+const coinjoinAccountUpdateRegisteredUtxos = (key: string, utxos: string[]) =>
+    ({
+        type: COINJOIN.ACCOUNT_UPDATE_REGISTERED_UTXOS,
+        key,
+        utxos,
     } as const);
 
 const coinjoinAccountAuthorize = (accountKey: string) =>
@@ -85,6 +93,7 @@ export type CoinjoinAccountAction =
     | ReturnType<typeof coinjoinAccountCreate>
     | ReturnType<typeof coinjoinAccountRemove>
     | ReturnType<typeof coinjoinAccountUpdateAnonymity>
+    | ReturnType<typeof coinjoinAccountUpdateRegisteredUtxos>
     | ReturnType<typeof coinjoinAccountAuthorize>
     | ReturnType<typeof coinjoinAccountAuthorizeSuccess>
     | ReturnType<typeof coinjoinAccountAuthorizeFailed>
@@ -95,6 +104,27 @@ const getCheckpoint = (
     account: Extract<Account, { backendType: 'coinjoin' }>,
     getState: GetState,
 ) => getState().wallet.coinjoin.accounts.find(a => a.key === account.key)?.checkpoint;
+
+const updateCoinjoinAccount = (account: Account) => (dispatch: Dispatch, getState: GetState) => {
+    const client = dispatch(getCoinjoinClient(account.symbol));
+    const params = getState().wallet.coinjoin.accounts.find(
+        r => r.key === account.key && r.session,
+    );
+    if (client && params?.session) {
+        // client.updateAccount(sanitizeAccount(account, params));
+        if (params.session.signedRounds.length === params.session.maxRounds) {
+            console.warn('UNREG!!!');
+            client.unregisterAccount(account.key);
+        } else {
+            const cjAccount = sanitizeAccount(account, params.session);
+            client.updateAccount(cjAccount);
+            const registeredUtxos = params.session.registeredUtxos.concat(
+                cjAccount.utxos.map(u => u.outpoint),
+            );
+            dispatch(coinjoinAccountUpdateRegisteredUtxos(account.key, registeredUtxos));
+        }
+    }
+};
 
 export const fetchAndUpdateAccount =
     (account: Account) => async (dispatch: Dispatch, getState: GetState) => {
@@ -142,7 +172,10 @@ export const fetchAndUpdateAccount =
 
             // TODO add isPending check?
             if (isAccountOutdated(account, accountInfo) || isInitialUpdate) {
-                dispatch(accountsActions.updateAccount(account, accountInfo));
+                const updatedAccount = dispatch(
+                    accountsActions.updateAccount(account, accountInfo),
+                );
+                dispatch(updateCoinjoinAccount(updatedAccount.payload));
             }
 
             // TODO remove invalid transactions
@@ -321,7 +354,7 @@ export const startCoinjoinSession =
 
         if (authResult) {
             // register authorized account
-            client.registerAccount(account);
+            client.registerAccount(sanitizeAccount(account, params));
             // switch to account
             dispatch(goto('wallet-index', { preserveParams: true }));
         }
