@@ -1,5 +1,5 @@
 import produce from 'immer';
-import { CoinjoinStatusEvent } from '@trezor/coinjoin';
+import { CoinjoinStatusEvent, ActiveRound } from '@trezor/coinjoin';
 import { STORAGE } from '@suite-actions/constants';
 import { createSelector } from '@reduxjs/toolkit';
 import * as COINJOIN from '@wallet-actions/constants/coinjoinConstants';
@@ -68,6 +68,37 @@ const createSession = (
         registeredUtxos: [],
         signedRounds: [],
     };
+};
+
+const updateSession = (draft: CoinjoinState, accountKey: string, round: ActiveRound) => {
+    const account = draft.accounts.find(a => a.key === accountKey);
+    if (!account || !account.session) return;
+
+    const deadline =
+        round.phase !== 0
+            ? new Date(Date.now() + 1000 * 60).toString()
+            : round.roundParameters.inputRegistrationEnd;
+
+    account.session = {
+        ...account.session,
+        phase: round.phase,
+        deadline,
+    };
+};
+
+const completeSession = (
+    draft: CoinjoinState,
+    action: Extract<Action, { type: typeof COINJOIN.SESSION_COMPLETED }>,
+) => {
+    const account = draft.accounts.find(a => a.key === action.accountKey);
+    if (!account) return;
+    if (account.session) {
+        account.previousSessions.push({
+            ...account.session,
+            timeEnded: Date.now(),
+        });
+        delete account.session;
+    }
 };
 
 const stopSession = (
@@ -157,6 +188,14 @@ export const coinjoinReducer = (
                 break;
             case COINJOIN.CLIENT_STATUS:
                 updateClientStatus(draft, action.payload);
+                break;
+
+            case COINJOIN.ROUND_PHASE_CHANGED:
+                updateSession(draft, action.accountKey, action.round);
+                break;
+
+            case COINJOIN.SESSION_COMPLETED:
+                completeSession(draft, action);
                 break;
 
             // no default
