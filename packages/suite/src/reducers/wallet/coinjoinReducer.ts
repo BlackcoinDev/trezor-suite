@@ -14,6 +14,7 @@ export type CoinjoinClientInstance = Omit<CoinjoinStatusEvent, 'changed'>;
 export type CoinjoinState = {
     accounts: CoinjoinAccount[];
     clients: PartialRecord<Account['symbol'], CoinjoinClientInstance>;
+    log: { time: string; value: string }[];
 };
 
 export type CoinjoinRootState = {
@@ -25,6 +26,7 @@ export type CoinjoinRootState = {
 const initialState: CoinjoinState = {
     accounts: [],
     clients: {},
+    log: [],
 };
 
 type ExtractActionPayload<A> = Extract<Action, { type: A }> extends { type: A; payload: infer P }
@@ -227,6 +229,18 @@ export const coinjoinReducer = (
             case COINJOIN.SESSION_COMPLETED:
                 completeSession(draft, action);
                 break;
+
+            case COINJOIN.CLIENT_LOG: {
+                const now = new Date();
+                draft.log.unshift({
+                    time: `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`,
+                    value: action.payload,
+                });
+                if (draft.log.length > 200) {
+                    draft.log = draft.log.slice(0, 200);
+                }
+                break;
+            }
 
             // no default
         }

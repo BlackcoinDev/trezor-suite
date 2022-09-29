@@ -87,6 +87,12 @@ const clientSessionCompleted = (accountKey: string) =>
         accountKey,
     } as const);
 
+const clientLog = (payload: string) =>
+    ({
+        type: COINJOIN.CLIENT_LOG,
+        payload,
+    } as const);
+
 export type CoinjoinClientAction =
     | ReturnType<typeof clientEnable>
     | ReturnType<typeof clientDisable>
@@ -97,7 +103,8 @@ export type CoinjoinClientAction =
     | ReturnType<typeof clientActiveRoundOwnership>
     | ReturnType<typeof clientActiveRoundSign>
     | ReturnType<typeof clientActiveRoundCompleted>
-    | ReturnType<typeof clientSessionCompleted>;
+    | ReturnType<typeof clientSessionCompleted>
+    | ReturnType<typeof clientLog>;
 
 const doPreauthorized = (round: ActiveRound) => (_dispatch: Dispatch, getState: GetState) => {
     const {
@@ -439,6 +446,10 @@ export const initCoinjoinClient = (symbol: Account['symbol']) => async (dispatch
         client.on('request', async data => {
             const response = await dispatch(onCoinjoinClientRequest(symbol, data));
             client.resolveRequest(response);
+        });
+        // handle log
+        client.on('log', (...args: any[]) => {
+            dispatch(clientLog(args.join(' ')));
         });
         dispatch(clientEnableSuccess(symbol, status));
         return client;
