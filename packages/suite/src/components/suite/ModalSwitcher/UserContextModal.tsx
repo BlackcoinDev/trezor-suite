@@ -149,9 +149,9 @@ export const UserContextModal = ({
         case 'disable-tor':
             return <DisableTor decision={payload.decision} onCancel={onCancel} />;
         case 'request-enable-tor':
-            return <RequestEnableTor decision={payload.decision} onCancel={onCancel} />;
+            return <RequestEnableTor {...payload} onCancel={onCancel} />;
         case 'tor-loading':
-            return <TorLoading decision={payload.decision} onCancel={onCancel} />;
+            return <TorLoading {...payload} onCancel={onCancel} />;
         case 'access-coinjoin-account':
             return (
                 <AccessCoinjoinAccount
