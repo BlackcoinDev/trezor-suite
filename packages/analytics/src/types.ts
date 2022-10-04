@@ -1,4 +1,4 @@
-export type App = 'suite' | 'connect-popup';
+export type App = 'suite' | 'connect';
 
 export type Environment = 'desktop' | 'web' | 'mobile' | '';
 
