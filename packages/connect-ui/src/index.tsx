@@ -6,12 +6,11 @@ import { UI } from '@trezor/connect';
 import { Transport, TransportProps } from './views/Transport';
 import { Passphrase, PassphraseProps } from './views/Passphrase';
 import { ErrorView, ErrorViewProps } from './views/Error';
-
-// support
 import { ThemeWrapper } from './support/ThemeWrapper';
 import { IntlWrapper } from './support/IntlWrapper';
 import { ErrorBoundary } from './support/ErrorBoundary';
 import { GlobalStyle } from './support/GlobalStyle';
+import { AnalyticsConsentWrapper } from './components/AnalyticsConsentWrapper';
 
 export type ConnectUIProps = TransportProps | PassphraseProps | ErrorViewProps;
 
@@ -35,7 +34,10 @@ export const ConnectUI = (props: ConnectUIProps) => {
             <GlobalStyle />
             <ThemeWrapper>
                 {/* todo: load translations from somewhere and pass them to intl */}
-                <IntlWrapper>{getComponent()}</IntlWrapper>
+                <IntlWrapper>
+                    {getComponent()}
+                    <AnalyticsConsentWrapper />
+                </IntlWrapper>
             </ThemeWrapper>
         </ErrorBoundary>
     );
