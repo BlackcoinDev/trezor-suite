@@ -14,7 +14,7 @@ import { DescriptorStream, DeviceDescriptorDiff } from './DescriptorStream';
 import { Device } from './Device';
 import type { Device as DeviceTyped } from '../types';
 import { DataManager } from '../data/DataManager';
-import { getBridgeInfo } from '../data/transportInfo';
+// import { getBridgeInfo } from '../data/transportInfo';
 import { initLog } from '../utils/debug';
 import { resolveAfter } from '../utils/promiseUtils';
 
@@ -22,7 +22,7 @@ import { WebUsbPlugin, ReactNativeUsbPlugin } from '../workers/workers';
 import { getAbortController } from './AbortController';
 import type { Controller } from './AbortController';
 
-const { BridgeV2, Fallback } = TrezorLink;
+const { BridgeTransport } = TrezorLink;
 
 // custom log
 const _log = initLog('DeviceList');
@@ -62,9 +62,11 @@ export interface DeviceList {
 export class DeviceList extends EventEmitter {
     transport: Transport;
 
+    // array of transport that might be used in this environment
+    transports: Transport[];
+
     transportPlugin: LowLevelPlugin | typeof undefined;
 
-    // @ts-expect-error: strictPropertyInitialization
     stream: DescriptorStream;
 
     devices: { [path: string]: Device } = {};
@@ -89,9 +91,10 @@ export class DeviceList extends EventEmitter {
         if (env === 'react-native' && typeof ReactNativeUsbPlugin !== 'undefined') {
             transports.push(ReactNativeUsbPlugin());
         } else {
-            const bridgeLatestVersion = getBridgeInfo().version.join('.');
-            const bridge = new BridgeV2(undefined, undefined);
-            bridge.setBridgeLatestVersion(bridgeLatestVersion);
+            // const bridgeLatestVersion = getBridgeInfo().version.join('.');
+            const bridge = new BridgeTransport({});
+
+            // bridge.setBridgeLatestVersion(bridgeLatestVersion);
 
             this.fetchController = getAbortController();
             const { signal } = this.fetchController;
@@ -102,8 +105,8 @@ export class DeviceList extends EventEmitter {
             // todo: code should not be detecting environment itself. imho it should be built with this information passed from build process maybe?
             const isNode =
                 !!process?.release?.name && process.release.name.search(/node|io\.js/) !== -1;
-            BridgeV2.setFetch(fetchWithSignal, isNode);
-            // @ts-expect-error TODO: https://github.com/trezor/trezor-suite/issues/5332
+
+            BridgeTransport.setFetch(fetchWithSignal, isNode);
             transports.push(bridge);
         }
 
@@ -111,7 +114,8 @@ export class DeviceList extends EventEmitter {
             transports.push(WebUsbPlugin());
         }
 
-        this.transport = new Fallback(transports);
+        this.transports = transports;
+
         this.messages = DataManager.getProtobufMessages();
     }
 
@@ -119,13 +123,28 @@ export class DeviceList extends EventEmitter {
         const { transport } = this;
         try {
             _log.debug('Initializing transports');
-            await transport.init(_log.enabled);
+
+            let transportInitError;
+            for (const transport of this.transports) {
+                try {
+                    await transport.init(_log.enabled);
+                    this.transport = transport;
+                } catch (e) {
+                    transportInitError = e;
+                }
+            }
+
+            if (!this.transport) {
+                throw new Error(transportInitError);
+            }
+
             _log.debug('Configuring transports');
-            await transport.configure(JSON.stringify(this.messages));
+            // @ts-ignore
+            transport.configure(this.messages);
             _log.debug('Configuring transports done');
 
-            const { activeName } = transport;
-            if (activeName === 'LowlevelTransportWithSharedConnections') {
+            const { name } = transport;
+            if (name === 'LowlevelTransportWithSharedConnections') {
                 // @ts-expect-error TODO: https://github.com/trezor/trezor-suite/issues/5332
                 this.transportPlugin = transport.activeTransport.plugin;
             }
@@ -257,8 +276,7 @@ export class DeviceList extends EventEmitter {
 
     transportType() {
         const { transport, transportPlugin } = this;
-        const { activeName } = transport;
-        if (activeName === 'BridgeTransport') {
+        if (transport.name === 'BridgeTransport') {
             return 'bridge';
         }
         if (transportPlugin) {
