@@ -142,7 +142,7 @@ export class TransportWithSharedConnections extends Transport {
 
     listen(): {};
 
-    // @ts-ignore
+    // @ts-expect-error
     async _silentEnumerate() {
         await this.sendToWorker({ type: 'enumerate-intent' });
 

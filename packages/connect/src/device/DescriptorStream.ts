@@ -16,11 +16,11 @@ export type DeviceDescriptorDiff = {
     connected: DeviceDescriptor[];
     disconnected: DeviceDescriptor[];
     changedSessions: DeviceDescriptor[];
-    changedDebugSessions: DeviceDescriptor[];
+    // changedDebugSessions: DeviceDescriptor[];
     acquired: DeviceDescriptor[];
-    debugAcquired: DeviceDescriptor[];
+    // debugAcquired: DeviceDescriptor[];
     released: DeviceDescriptor[];
-    debugReleased: DeviceDescriptor[];
+    // debugReleased: DeviceDescriptor[];
     descriptors: DeviceDescriptor[];
 };
 
@@ -50,22 +50,19 @@ const getDiff = (
             typeof d.session !== 'string',
     );
 
-    const changedDebugSessions = descriptors.filter(d => {
-        const currentDescriptor = current.find(x => x.path === d.path);
-        if (currentDescriptor) {
-            return currentDescriptor.debugSession !== d.debugSession;
-        }
-        return false;
-    });
-    const debugAcquired = changedSessions.filter(d => typeof d.debugSession === 'string');
-    const debugReleased = changedSessions.filter(d => typeof d.debugSession !== 'string');
+    // const changedDebugSessions = descriptors.filter(d => {
+    //     const currentDescriptor = current.find(x => x.path === d.path);
+    //     if (currentDescriptor) {
+    //         return currentDescriptor.debugSession !== d.debugSession;
+    //     }
+    //     return false;
+    // });
+    // const debugAcquired = changedSessions.filter(d => typeof d.debugSession === 'string');
+    // const debugReleased = changedSessions.filter(d => typeof d.debugSession !== 'string');
 
-    const didUpdate =
-        connected.length +
-            disconnected.length +
-            changedSessions.length +
-            changedDebugSessions.length >
-        0;
+    const didUpdate = connected.length + disconnected.length + changedSessions.length > 0;
+    // changedDebugSessions.length >
+    // 0;
 
     return {
         connected,
@@ -73,9 +70,9 @@ const getDiff = (
         changedSessions,
         acquired,
         released,
-        changedDebugSessions,
-        debugAcquired,
-        debugReleased,
+        // changedDebugSessions,
+        // debugAcquired,
+        // debugReleased,
         didUpdate,
         descriptors,
     };

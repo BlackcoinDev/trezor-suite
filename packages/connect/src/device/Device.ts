@@ -161,7 +161,6 @@ export class Device extends EventEmitter {
                     // @ts-expect-error TODO: https://github.com/trezor/trezor-suite/issues/5332
                     previous: this.originalDescriptor.session,
                 },
-                debug: false,
             });
             _log.debug('Expected session id:', sessionID);
             this.activitySessionID = sessionID;
@@ -200,7 +199,7 @@ export class Device extends EventEmitter {
                 }
             }
             try {
-                await this.transport.release(this.activitySessionID, false, false);
+                await this.transport.release(this.activitySessionID, false);
                 if (this.deferredActions[DEVICE.RELEASE])
                     await this.deferredActions[DEVICE.RELEASE].promise;
             } catch (err) {
@@ -667,7 +666,7 @@ export class Device extends EventEmitter {
                 if (this.commands) {
                     this.commands.cancel();
                 }
-                this.transport.release(this.activitySessionID, true, false);
+                this.transport.release(this.activitySessionID, true);
             } catch (err) {
                 // empty
             }
@@ -746,7 +745,7 @@ export class Device extends EventEmitter {
         return networkType ? ['cardano'].includes(networkType) : false;
     }
 
-    //
+    // For old bridges before 2.0.32. Doesn't work very well
     async legacyForceRelease() {
         if (this.isUsedHere()) {
             await this.acquire();

@@ -1,15 +1,13 @@
 /// <reference types="w3c-web-usb" />
 
 import { EventEmitter } from 'events';
-import { Transport, MessageFromTrezor } from './abstract';
+import { Transport } from './abstract';
 import { buildBuffers } from '../lowlevel/send';
 import { receiveAndParse } from '../lowlevel/receive';
 
-import type { AcquireInput } from '../types';
+import { AcquireInput, TrezorDeviceInfoWithSession, MessageFromTrezor } from '../types';
 import {
     CONFIGURATION_ID,
-    DEBUG_ENDPOINT_ID,
-    DEBUG_INTERFACE_ID,
     ENDPOINT_ID,
     INTERFACE_ID,
     T1HID_VENDOR,
@@ -17,19 +15,18 @@ import {
 } from '../constants';
 
 export class WebUsbTransport extends Transport {
-    // todo: global replace WebUsbPlugin for webusb
-    name = 'WebUsbPlugin';
+    name = 'WebusbTransport';
     requestNeeded = true;
     unreadableHidDevice = false;
     unreadableHidDeviceChange = new EventEmitter();
+    priority = 0;
 
-    constructor({ debug }: { debug?: boolean }) {
-        super({ debug });
+    constructor({ messages }: ConstructorParameters<typeof Transport>[0]) {
+        super({ messages });
     }
 
-    init(debug?: boolean) {
+    init() {
         console.log('WebUsbTransport init !!!!!!!');
-        this.debug = !!debug;
         console.log('navigator', navigator);
         const { usb } = navigator;
         if (!usb) {
@@ -37,18 +34,6 @@ export class WebUsbTransport extends Transport {
         }
         console.log('usb in webusbtransport init');
         return Promise.resolve(); // type compatibility
-    }
-
-    _deviceHasDebugLink(device: USBDevice) {
-        try {
-            const iface = device.configurations[0].interfaces[DEBUG_INTERFACE_ID].alternates[0];
-            return (
-                iface.interfaceClass === 255 &&
-                iface.endpoints[0].endpointNumber === DEBUG_ENDPOINT_ID
-            );
-        } catch (e) {
-            return false;
-        }
     }
 
     _deviceIsHid(device: USBDevice) {
@@ -80,8 +65,7 @@ export class WebUsbTransport extends Transport {
                 bootloaderId++;
                 path += bootloaderId;
             }
-            const debug = this._deviceHasDebugLink(device);
-            return { path, device, debug };
+            return { path, device };
         });
     }
 
@@ -116,25 +100,26 @@ export class WebUsbTransport extends Transport {
         return this._lastDevices;
     }
 
-    _lastDevices: { path: string; device: USBDevice; debug: boolean }[] = [];
+    _lastDevices: { path: string; device: USBDevice }[] = [];
 
     async enumerate() {
         console.log('enumerate');
         return (await this._listDevices()).map(info => ({
             path: info.path,
-            debug: info.debug,
         }));
     }
 
-    // @ts-ignore
-    async listen() {
-        // @ts-ignore
-        navigator.usb.addEventListener('connect', async event => {
-            console.log('event', event);
-            // this._listDevices();
-            await this._listDevices();
-            this.emit('TRANSPORT.DEVICE_CONNECTED', event.device);
-            // Add event.device to the UI.
+    listen() {
+        return new Promise<TrezorDeviceInfoWithSession[]>(resolve => {
+            navigator.usb.addEventListener('connect', async event => {
+                console.log('event', event);
+                // this._listDevices();
+                const devices = await this._listDevices();
+                this.emit('TRANSPORT.DEVICE_CONNECTED', event.device);
+                // @ts-ignore - todo webusb
+                return resolve(devices);
+                // Add event.device to the UI.
+            });
         });
     }
 
@@ -156,34 +141,29 @@ export class WebUsbTransport extends Transport {
         name,
         path = this._lastDevices[0]?.path || '',
         data,
-        debug,
     }: {
         session: string;
         path: string;
         name: string;
         data: Record<string, unknown>;
-        debug: boolean;
     }): Promise<MessageFromTrezor> {
         console.log('webusb transport call. session', session);
         console.log('webusb transport call. name', name);
         console.log('webusb transport call. path', path);
         console.log('webusb transport call. data', data);
-        console.log('webusb transport call. debug', debug);
 
-        await this.send({ name, path, data, debug, session });
-        return this.receive({ path, debug });
+        await this.send({ name, path, data, session });
+        return this.receive({ path });
     }
 
     async send({
         path,
         data,
-        debug,
         // session,
         name,
     }: {
         path: string;
         data: Record<string, unknown>;
-        debug: boolean;
         session: string;
         name: string;
     }) {
@@ -196,31 +176,31 @@ export class WebUsbTransport extends Transport {
             newArray.set(new Uint8Array(buffer), 1);
 
             if (!device.opened) {
-                await this.acquire({ input: { path }, debug });
+                await this.acquire({ input: { path } });
             }
 
-            const endpoint = debug ? DEBUG_ENDPOINT_ID : ENDPOINT_ID;
+            const endpoint = ENDPOINT_ID;
             device.transferOut(endpoint, newArray);
         }
     }
 
-    async receive({ path, debug }: { path: string; debug: boolean }) {
+    async receive({ path }: { path: string }) {
         console.log('transport receive, path', path);
         const message: MessageFromTrezor = await receiveAndParse(this.messages!, () =>
-            this._read(path, debug),
+            this._read(path),
         );
         console.log('transport receive, message', message);
 
         return message;
     }
 
-    async _read(path: string, debug: boolean): Promise<ArrayBuffer> {
+    async _read(path: string): Promise<ArrayBuffer> {
         const device = this._findDevice(path);
-        const endpoint = debug ? DEBUG_ENDPOINT_ID : ENDPOINT_ID;
+        const endpoint = ENDPOINT_ID;
 
         try {
             if (!device.opened) {
-                await this.acquire({ input: { path }, debug });
+                await this.acquire({ input: { path } });
             }
 
             const res = await device.transferIn(endpoint, 64);
@@ -229,7 +209,7 @@ export class WebUsbTransport extends Transport {
                 throw new Error('no data');
             }
             if (res.data.byteLength === 0) {
-                return this._read(path, debug);
+                return this._read(path);
             }
             return res.data.buffer.slice(1);
         } catch (e) {
@@ -242,15 +222,7 @@ export class WebUsbTransport extends Transport {
     }
 
     //
-    async acquire({
-        input,
-        debug,
-        first = false,
-    }: {
-        input: AcquireInput;
-        debug: boolean;
-        first?: boolean;
-    }) {
+    async acquire({ input, first = false }: { input: AcquireInput; first?: boolean }) {
         console.log('transport acquire', input);
         const { path } = input;
         for (let i = 0; i < 5; i++) {
@@ -258,7 +230,7 @@ export class WebUsbTransport extends Transport {
                 await new Promise(resolve => setTimeout(() => resolve(undefined), i * 200));
             }
             try {
-                await this._connectIn(path, debug, first);
+                await this._connectIn(path, first);
                 return Promise.resolve('??');
             } catch (e) {
                 // ignore
@@ -270,8 +242,8 @@ export class WebUsbTransport extends Transport {
         return Promise.resolve('??');
     }
 
-    async _connectIn(path: string, debug: boolean, first: boolean) {
-        console.log('_connectIn: path, debug, first', path, debug, first);
+    async _connectIn(path: string, first: boolean) {
+        console.log('_connectIn: path, first', path, first);
         const device: USBDevice = this._findDevice(path);
         await device.open();
 
@@ -285,15 +257,15 @@ export class WebUsbTransport extends Transport {
             }
         }
 
-        const interfaceId = debug ? DEBUG_INTERFACE_ID : INTERFACE_ID;
+        const interfaceId = INTERFACE_ID;
         await device.claimInterface(interfaceId);
     }
 
     // todo: params different meaning from bridge
-    async release(path: string, debug: boolean, last: boolean) {
+    async release(path: string, last: boolean) {
         const device: USBDevice = await this._findDevice(path);
 
-        const interfaceId = debug ? DEBUG_INTERFACE_ID : INTERFACE_ID;
+        const interfaceId = INTERFACE_ID;
         await device.releaseInterface(interfaceId);
         if (last) {
             await device.close();

@@ -1,76 +1,51 @@
 import * as protobuf from 'protobufjs/light';
 import { EventEmitter } from 'events';
+import { TrezorDeviceInfoWithSession, AcquireInput, MessageFromTrezor } from '../types';
 
-// does not have session
-export type TrezorDeviceInfo = {
-    path: string;
+type ConstructorParams = {
+    messages: JSON;
 };
-
-export type TrezorDeviceInfoDebug = {
-    path: string;
-    debug: boolean;
-};
-
-export type TrezorDeviceInfoWithSession = TrezorDeviceInfo & {
-    session?: string | null;
-    debugSession?: string | null;
-    debug: boolean;
-};
-
-// export type TrezorDeviceInfoWithSession = TrezorDeviceInfo & {
-//     session?: string | null;
-//     debugSession?: string | null;
-//     debug: boolean;
-// };
-
-export type AcquireInput = {
-    path: string;
-    previous?: string;
-};
-
-export type MessageFromTrezor = { type: string; message: Record<string, unknown> };
 
 export abstract class Transport extends EventEmitter {
     configured = false;
-    messages?: protobuf.Root;
-    debug = false;
+    messages: protobuf.Root;
     name = '';
     version = '';
+    abstract priority: number;
 
     isOutdated = false;
 
-    constructor({ debug = false }) {
+    constructor({ messages }: ConstructorParams) {
         super();
-        this.debug = debug;
+        this.messages = protobuf.Root.fromJSON(messages as protobuf.INamespace);
     }
 
+    /**
+     * Tries to initiate transport. Transport might not be available e.g. bridge not running.
+     * TODO: return type? should it ever throw?
+     */
+    abstract init(): Promise<void>;
+
+    /**
+     * Setup listeners for device changes (connect, disconnect, change?).
+     * What should it do? Will start emitting DEVICE events after this is fired?
+     */
     abstract listen(old?: TrezorDeviceInfoWithSession[]): Promise<TrezorDeviceInfoWithSession[]>;
+
+    /**
+     * List Trezor devices
+     */
     abstract enumerate(): Promise<TrezorDeviceInfoWithSession[]>;
 
-    // TODO(karliatto): we want to totally get rid of `listen`, and use instead `enumerate`.
-    // TODO(mroz22): maybe we want to have listen. which will register event listeners for usb changes
-    // abstract listen(): void;
+    /**
+     * Acquire session
+     */
+    abstract acquire({ input, first }: { input: AcquireInput; first?: boolean }): Promise<string>;
 
-    abstract acquire({
-        input,
-        debug,
-        first,
-    }: {
-        input: AcquireInput;
-        debug: boolean;
-        first?: boolean;
-    }): Promise<string>;
-    abstract release(session: string, onclose: boolean, debugLink: boolean): Promise<void>;
-
-    // maybe not needed?
-    configure(messages: JSON) {
-        // @ts-expect-error
-        this.messages = protobuf.Root.fromJSON(messages);
-        this.configured = true;
-    }
-
-    // resolves when the transport can be used; rejects when it cannot
-    abstract init(debug?: boolean): Promise<void>;
+    /**
+     * Release session
+     */
+    abstract release(session: string, onclose: boolean): Promise<void>;
 
     /**
      * Encode data and write it to transport layer
@@ -79,47 +54,43 @@ export abstract class Transport extends EventEmitter {
         path,
         session,
         data,
-        debug,
         name,
     }: {
         path?: string;
         session?: string;
-        debug: boolean;
         // wrap object and name?
         name: string;
         data: Record<string, unknown>;
     }): Promise<void>;
 
-    // only read from transport
+    /**
+     * Only read from transport
+     */
     abstract receive({
         path,
         session,
-        debug,
     }: {
         path?: string;
         session?: string;
-        debug: boolean;
     }): Promise<MessageFromTrezor>;
 
-    // send and read after that
+    /**
+     * send and read after that
+     */
     abstract call({
         session,
         name,
         data,
-        debug,
     }: {
         session: string;
         name: string;
         data: Record<string, unknown>;
-        debug: boolean;
     }): Promise<MessageFromTrezor>;
 
+    // todo: not sure if needed. probably not
     stop() {
         console.log('abstract: stop transport');
     }
-    // todo:
-    requestDevice() {}
-    // abstract stop(): void;
 
     // watch
     // call

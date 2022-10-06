@@ -362,7 +362,6 @@ export class DeviceCommands {
                 session: this.sessionId,
                 name: type,
                 data: msg,
-                debug: false,
             }) as any; // TODO: https://github.com/trezor/trezor-suite/issues/5301
             this.callPromise = promise;
             const res = await promise;
@@ -401,7 +400,7 @@ export class DeviceCommands {
         } catch (error) {
             // handle possible race condition
             // Bridge may have some unread message in buffer, read it
-            await this.transport.receive({ session: this.sessionId, debug: false });
+            await this.transport.receive({ session: this.sessionId });
             // throw error anyway, next call should be resolved properly
             throw error;
         }
@@ -704,12 +703,11 @@ export class DeviceCommands {
                 session: this.sessionId,
                 name: 'Cancel',
                 data: {},
-                debug: false,
             });
             // post does not read back from usb stack. this means that there is a pending message left
             // and we need to remove it so that it does not interfere with the next transport call.
             // see DeviceCommands.typedCall
-            await this.transport.receive({ session: this.sessionId, debug: false });
+            await this.transport.receive({ session: this.sessionId });
         }
     }
 }

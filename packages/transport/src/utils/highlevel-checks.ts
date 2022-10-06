@@ -52,11 +52,9 @@ export function devices(res: any): Array<TrezorDeviceInfoWithSession> {
         return {
             path: pathS,
             session: convertSession(o.session),
-            debugSession: convertSession(o.debugSession),
             // @ts-expect-error
             product: o.product,
             vendor: o.vendor,
-            debug: !!o.debug,
         };
     });
 }

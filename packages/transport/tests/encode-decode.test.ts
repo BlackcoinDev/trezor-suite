@@ -521,7 +521,7 @@ describe('Real messages', () => {
     fixtures.forEach(f => {
         describe(f.name, () => {
             const Messages = ProtoBuf.Root.fromJSON({
-                // @ts-ignore
+                // @ts-expect-error
                 nested: { messages: { nested: { ...f.message } } },
             });
             const Message = Messages.lookupType(`messages.${f.name}`);

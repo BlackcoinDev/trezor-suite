@@ -1,6 +1,6 @@
 import * as protobuf from 'protobufjs/light';
 
-const { createMessageFromName } = require('../src/lowlevel/protobuf/messages');
+import { createMessageFromName } from '../src/lowlevel/protobuf/messages';
 
 const json = {
     nested: {

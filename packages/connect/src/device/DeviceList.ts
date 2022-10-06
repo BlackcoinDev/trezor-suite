@@ -3,11 +3,17 @@
 /* eslint-disable max-classes-per-file, @typescript-eslint/no-use-before-define */
 
 import EventEmitter from 'events';
-import TrezorLink, {
+import {
+    // BridgeTransport,
+    WebUsbTransport,
     Transport,
     TrezorDeviceInfoWithSession as DeviceDescriptor,
+    getAvailableTransport,
+    // setFetch as setTransportFetch,
 } from '@trezor/transport';
-import fetch from 'cross-fetch';
+// import fetch from 'cross-fetch';
+// import { getAbortController } from './AbortController';
+
 import { ERRORS } from '../constants';
 import { TRANSPORT, DEVICE, TransportInfo } from '../events';
 import { DescriptorStream, DeviceDescriptorDiff } from './DescriptorStream';
@@ -18,11 +24,8 @@ import { DataManager } from '../data/DataManager';
 import { initLog } from '../utils/debug';
 import { resolveAfter } from '../utils/promiseUtils';
 
-import { WebUsbPlugin, ReactNativeUsbPlugin } from '../workers/workers';
-import { getAbortController } from './AbortController';
+import { ReactNativeUsbPlugin } from '../workers/workers';
 import type { Controller } from './AbortController';
-
-const { BridgeTransport } = TrezorLink;
 
 // custom log
 const _log = initLog('DeviceList');
@@ -60,6 +63,7 @@ export interface DeviceList {
     emit<K extends keyof DeviceListEvents>(type: K, args: DeviceListEvents[K]): boolean;
 }
 export class DeviceList extends EventEmitter {
+    // @ts-expect-error
     transport: Transport;
 
     // array of transport that might be used in this environment
@@ -67,13 +71,14 @@ export class DeviceList extends EventEmitter {
 
     transportPlugin: LowLevelPlugin | typeof undefined;
 
+    // @ts-expect-error
     stream: DescriptorStream;
 
     devices: { [path: string]: Device } = {};
 
     creatingDevicesDescriptors: { [k: string]: DeviceDescriptor } = {};
 
-    messages: JSON | Record<string, any>;
+    messages: JSON;
 
     transportStartPending = 0;
 
@@ -83,73 +88,45 @@ export class DeviceList extends EventEmitter {
 
     constructor() {
         super();
-
         const { env, webusb } = DataManager.settings;
+        // const { env } = DataManager.settings;
 
         const transports: Transport[] = [];
+        this.messages = DataManager.getProtobufMessages();
 
         if (env === 'react-native' && typeof ReactNativeUsbPlugin !== 'undefined') {
             transports.push(ReactNativeUsbPlugin());
         } else {
-            // const bridgeLatestVersion = getBridgeInfo().version.join('.');
-            const bridge = new BridgeTransport({});
-
-            // bridge.setBridgeLatestVersion(bridgeLatestVersion);
-
-            this.fetchController = getAbortController();
-            const { signal } = this.fetchController;
-            // @ts-expect-error TODO: https://github.com/trezor/trezor-suite/issues/5332
-            const fetchWithSignal = (args, options = {}) => fetch(args, { ...options, signal });
-
-            // detection of environment browser/node
-            // todo: code should not be detecting environment itself. imho it should be built with this information passed from build process maybe?
-            const isNode =
-                !!process?.release?.name && process.release.name.search(/node|io\.js/) !== -1;
-
-            BridgeTransport.setFetch(fetchWithSignal, isNode);
-            transports.push(bridge);
+            // // const bridgeLatestVersion = getBridgeInfo().version.join('.');
+            // const bridge = new BridgeTransport({ messages: this.messages });
+            // // bridge.setBridgeLatestVersion(bridgeLatestVersion);
+            // this.fetchController = getAbortController();
+            // const { signal } = this.fetchController;
+            // // @ts-expect-error TODO: https://github.com/trezor/trezor-suite/issues/5332
+            // const fetchWithSignal = (args, options = {}) => fetch(args, { ...options, signal });
+            // // detection of environment browser/node
+            // // todo: code should not be detecting environment itself. imho it should be built with this information passed from build process maybe?
+            // const isNode =
+            //     !!process?.release?.name && process.release.name.search(/node|io\.js/) !== -1;
+            // setTransportFetch(fetchWithSignal, isNode);
+            // transports.push(bridge);
         }
 
-        if (webusb && typeof WebUsbPlugin !== 'undefined') {
-            transports.push(WebUsbPlugin());
+        if (webusb) {
+            transports.push(new WebUsbTransport({ messages: this.messages }));
         }
 
-        this.transports = transports;
-
-        this.messages = DataManager.getProtobufMessages();
+        this.transports = transports.sort((a, b) => a.priority - b.priority);
     }
 
     async init() {
-        const { transport } = this;
         try {
             _log.debug('Initializing transports');
 
-            let transportInitError;
-            for (const transport of this.transports) {
-                try {
-                    await transport.init(_log.enabled);
-                    this.transport = transport;
-                } catch (e) {
-                    transportInitError = e;
-                }
-            }
+            console.log('this.transports', this.transports);
+            this.transport = await getAvailableTransport(this.transports);
 
-            if (!this.transport) {
-                throw new Error(transportInitError);
-            }
-
-            _log.debug('Configuring transports');
-            // @ts-ignore
-            transport.configure(this.messages);
-            _log.debug('Configuring transports done');
-
-            const { name } = transport;
-            if (name === 'LowlevelTransportWithSharedConnections') {
-                // @ts-expect-error TODO: https://github.com/trezor/trezor-suite/issues/5332
-                this.transportPlugin = transport.activeTransport.plugin;
-            }
-
-            await this._initStream();
+            this._initStream();
 
             // listen for self emitted events and resolve pending transport event if needed
             this.on(DEVICE.CONNECT, this.resolveTransportEvent.bind(this));
@@ -206,8 +183,9 @@ export class DeviceList extends EventEmitter {
         stream.listen();
         this.stream = stream;
 
-        if (this.transportPlugin && this.transportPlugin.name === 'WebUsbPlugin') {
-            const { unreadableHidDeviceChange } = this.transportPlugin;
+        if (this.transport.name === 'WebusbTransport') {
+            // @ts-ignore
+            const { unreadableHidDeviceChange } = this.transport;
             // TODO: https://github.com/trezor/trezor-link/issues/40
             const UNREADABLE_PATH = 'unreadable'; // unreadable device doesn't return incremental path.
             unreadableHidDeviceChange.on('change', () => {
@@ -216,8 +194,8 @@ export class DeviceList extends EventEmitter {
                         {
                             path: UNREADABLE_PATH,
                             session: null,
-                            debugSession: null,
-                            debug: false,
+                            // debugSession: null,
+                            // debug: false,
                         },
                         'HID_DEVICE',
                     );

@@ -18,3 +18,8 @@ export { BridgeTransport } from './transports/bridge';
 export { WebUsbTransport } from './transports/webusb';
 
 export { getAvailableTransport } from './utils/getAvailableTransport';
+
+/**
+ * Set fetch for this lib globally
+ */
+export { setFetch } from './utils/http';
