@@ -200,7 +200,7 @@ const initDevice = async (method: AbstractMethod) => {
         throw ERRORS.TypedError('Transport_Missing');
     }
 
-    const isWebUsb = _deviceList.transportType() === 'WebUsbPlugin';
+    const isWebUsb = _deviceList.transportType() === 'WebusbTransport';
     let device: Device | typeof undefined;
     let showDeviceSelection = isWebUsb;
     if (method.devicePath) {
@@ -908,7 +908,8 @@ const initDeviceList = async (settings: ConnectSettings) => {
         });
 
         _deviceList.on(TRANSPORT.ERROR, async error => {
-            _log.warn('TRANSPORT.ERROR', error);
+            console.log('core _deviceList.on.TRANSPORT.ERROR error=', error);
+            // _log.warn('TRANSPORT.ERROR', error);
             if (_deviceList) {
                 _deviceList.disconnectDevices();
                 _deviceList.dispose();
@@ -1034,7 +1035,7 @@ export const initTransport = async (settings: ConnectSettings) => {
 
 const disableWebUSBTransport = async () => {
     if (!_deviceList) return;
-    if (_deviceList.transportType() !== 'WebUsbPlugin') return;
+    if (_deviceList.transportType() !== 'WebusbTransport') return;
     // override settings
     const settings = DataManager.getSettings();
     settings.webusb = false;

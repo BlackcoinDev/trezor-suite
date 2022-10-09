@@ -43,6 +43,8 @@ function parseResult(text: string) {
 }
 
 export async function request(options: HttpRequestOptions) {
+    console.log('transport: util: http: request');
+
     const fetchOptions = {
         method: options.method,
         body: wrapBody(options.body),
@@ -72,6 +74,7 @@ export async function request(options: HttpRequestOptions) {
         return parseResult(resText);
     }
     const resJson = parseResult(resText);
+    console.log('transport: util: http: resJson', resJson);
     if (typeof resJson === 'object' && resJson != null && resJson.error != null) {
         throw new Error(resJson.error);
     } else {

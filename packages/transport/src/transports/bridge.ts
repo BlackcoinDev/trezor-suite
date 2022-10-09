@@ -7,6 +7,11 @@ import { Transport } from './abstract';
 
 import type { AcquireInput, TrezorDeviceInfoWithSession } from '../types';
 
+const resolveAfter = (msec: number, value?: any) =>
+    new Promise<any>(resolve => {
+        setTimeout(resolve, msec, value);
+    });
+
 type IncompleteRequestOptions = {
     body?: Array<any> | Record<string, unknown> | string;
     url: string;
@@ -27,16 +32,17 @@ export class BridgeTransport extends Transport {
     }
 
     async init() {
-        await this._silentInit();
-    }
+        try {
+            const infoS = await http({
+                url: this.url,
+                method: 'POST',
+            });
+            const info = check.info(infoS);
+            this.version = info.version;
+        } catch (err) {
+            throw new Error('bridge is not running');
+        }
 
-    async _silentInit() {
-        const infoS = await http({
-            url: this.url,
-            method: 'POST',
-        });
-        const info = check.info(infoS);
-        this.version = info.version;
         // const newVersion =
         //     typeof this.bridgeVersion === 'string'
         //         ? this.bridgeVersion
@@ -47,18 +53,48 @@ export class BridgeTransport extends Transport {
         //               }),
         //           );
         // this.isOutdated = versionUtils.isNewer(newVersion, this.version);
+        // this.emit('transport-start');
     }
 
-    async listen(old?: Array<TrezorDeviceInfoWithSession>) {
-        if (old == null) {
-            throw new Error('Bridge v2 does not support listen without previous.');
+    // todo:
+    // - listen should not throw on expected timeout, this case should be handled
+    // inside listen method and next call to listen should be made. now, this is done
+    // Device descriptor, but this is wrong, this throw should be expected and as that
+    // it should be handled directly here.
+    // @ts-ignore
+    async listen(): Promise<TrezorDeviceInfoWithSession[]> {
+        console.log('transport: bridge: listen, super.descriptors', this.descriptors);
+
+        const listenTimestamp = new Date().getTime();
+
+        try {
+            const devicesS = await this._post({
+                url: '/listen',
+                body: this.descriptors.map(o => ({
+                    ...o,
+                    //  debug: true,
+                    //   debugSession: null
+                })),
+            });
+            const devices = check.devices(devicesS);
+
+            this._onListenResult(devices);
+            return this.listen();
+        } catch (err) {
+            console.log('transport: bridge: listen: err', err);
+
+            // todo:
+            // distinguish errors maybe?
+
+            const time = new Date().getTime() - listenTimestamp;
+
+            if (time > 1100) {
+                await resolveAfter(1000, null);
+                return this.listen();
+            } else {
+                this.emit('transport-error', err);
+            }
         }
-        const devicesS = await this._post({
-            url: '/listen',
-            body: old.map(o => ({ ...o, debug: true, debugSession: null })),
-        });
-        const devices = check.devices(devicesS);
-        return devices;
     }
 
     async enumerate() {
@@ -68,7 +104,12 @@ export class BridgeTransport extends Transport {
     }
 
     async acquire({ input }: { input: AcquireInput }) {
-        const acquireS = await this._acquireMixed(input);
+        console.log('transport: bridge: acquire: input', input);
+        const previousStr = input.previous == null ? 'null' : input.previous;
+        const url = `/acquire/${input.path}/${previousStr}`;
+        const acquireS = await this._post({ url });
+        console.log('transport: bridge: acquire acquireS', acquireS);
+
         return check.acquire(acquireS);
     }
 
@@ -134,6 +175,10 @@ export class BridgeTransport extends Transport {
         return check.call(jsonData);
     }
 
+    /**
+     * All bridge endpoints use POST methods
+     * For documentation, look here: https://github.com/trezor/trezord-go#api-documentation
+     */
     _post(options: IncompleteRequestOptions) {
         return http({
             ...options,
@@ -141,11 +186,5 @@ export class BridgeTransport extends Transport {
             url: this.url + options.url,
             skipContentTypeHeader: true,
         });
-    }
-
-    _acquireMixed(input: AcquireInput) {
-        const previousStr = input.previous == null ? 'null' : input.previous;
-        const url = `/acquire/${input.path}/${previousStr}`;
-        return this._post({ url });
     }
 }

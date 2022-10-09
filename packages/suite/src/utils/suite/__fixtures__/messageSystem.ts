@@ -549,7 +549,7 @@ export const validateTransportCompatibility = [
             webusbplugin: '2',
         },
         transport: {
-            type: 'WebUsbPlugin',
+            type: 'WebusbTransport',
             version: '2.0.0',
         },
         result: true,
@@ -561,7 +561,7 @@ export const validateTransportCompatibility = [
             webusbplugin: '1.9.2',
         },
         transport: {
-            type: 'WebUsbPlugin',
+            type: 'WebusbTransport',
             version: '1.9.3',
         },
         result: false,

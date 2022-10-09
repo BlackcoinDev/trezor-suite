@@ -5,7 +5,7 @@ import { Transport } from './abstract';
 import { buildBuffers } from '../lowlevel/send';
 import { receiveAndParse } from '../lowlevel/receive';
 
-import { AcquireInput, TrezorDeviceInfoWithSession, MessageFromTrezor } from '../types';
+import { AcquireInput, MessageFromTrezor } from '../types';
 import {
     CONFIGURATION_ID,
     ENDPOINT_ID,
@@ -26,14 +26,38 @@ export class WebUsbTransport extends Transport {
     }
 
     init() {
-        console.log('WebUsbTransport init !!!!!!!');
-        console.log('navigator', navigator);
-        const { usb } = navigator;
-        if (!usb) {
+        console.log('transport. webusb. init');
+        if (!navigator.usb) {
             throw new Error('WebUSB is not available on this browser.');
         }
-        console.log('usb in webusbtransport init');
+
+        this.emit('transport-start');
+
         return Promise.resolve(); // type compatibility
+    }
+
+    listen() {
+        console.log('transport: webusb: listen');
+        const onConnect = async (_event: USBConnectionEvent) => {
+            // this._listDevices();
+            const devices = await this._listDevices();
+            console.log('transport: webusb: listen result', devices);
+
+            this._onListenResult(devices);
+        };
+
+        navigator.usb.addEventListener('connect', onConnect);
+
+        return Promise.resolve([]);
+        // return this.enumerate();
+    }
+
+    async enumerate() {
+        console.log('transport: webusb: enumerate');
+
+        return (await this._listDevices()).map(info => ({
+            path: info.path,
+        }));
     }
 
     _deviceIsHid(device: USBDevice) {
@@ -47,7 +71,6 @@ export class WebUsbTransport extends Transport {
             );
             return isTrezor;
         });
-        console.log('transport. _listDevices. trezorDevices', trezorDevices);
         const hidDevices = trezorDevices.filter(dev => this._deviceIsHid(dev));
         const nonHidDevices = trezorDevices.filter(dev => !this._deviceIsHid(dev));
         return [hidDevices, nonHidDevices];
@@ -71,7 +94,6 @@ export class WebUsbTransport extends Transport {
 
     async _listDevices() {
         const devices = await navigator.usb.getDevices();
-        console.log('tranasport. _listdevices(). devices', devices);
 
         // this._lastDevices = nonHidDevices.map(device => {
         //     // path is just serial number
@@ -96,37 +118,12 @@ export class WebUsbTransport extends Transport {
             this.unreadableHidDeviceChange.emit('change');
         }
 
-        console.log('this._lastDevices', this._lastDevices);
         return this._lastDevices;
     }
 
     _lastDevices: { path: string; device: USBDevice }[] = [];
 
-    async enumerate() {
-        console.log('enumerate');
-        return (await this._listDevices()).map(info => ({
-            path: info.path,
-        }));
-    }
-
-    listen() {
-        return new Promise<TrezorDeviceInfoWithSession[]>(resolve => {
-            navigator.usb.addEventListener('connect', async event => {
-                console.log('event', event);
-                // this._listDevices();
-                const devices = await this._listDevices();
-                this.emit('TRANSPORT.DEVICE_CONNECTED', event.device);
-                // @ts-ignore - todo webusb
-                return resolve(devices);
-                // Add event.device to the UI.
-            });
-        });
-    }
-
-    _findDevice(path: string) {
-        console.log('_findDevice in list: ', this._lastDevices);
-        console.log('_findDevice path: ', path);
-
+    _findDevice(_path: string) {
         // const deviceO = this._lastDevices.find(d => d.path === path);
         const deviceO = this._lastDevices[0];
         if (deviceO == null) {
@@ -185,7 +182,7 @@ export class WebUsbTransport extends Transport {
     }
 
     async receive({ path }: { path: string }) {
-        console.log('transport receive, path', path);
+        console.log('transport: webusb receive, path', path);
         const message: MessageFromTrezor = await receiveAndParse(this.messages!, () =>
             this._read(path),
         );
@@ -223,7 +220,7 @@ export class WebUsbTransport extends Transport {
 
     //
     async acquire({ input, first = false }: { input: AcquireInput; first?: boolean }) {
-        console.log('transport acquire', input);
+        console.log('transport: webusb: acquire', input);
         const { path } = input;
         for (let i = 0; i < 5; i++) {
             if (i > 0) {
@@ -231,19 +228,21 @@ export class WebUsbTransport extends Transport {
             }
             try {
                 await this._connectIn(path, first);
-                return Promise.resolve('??');
+                return Promise.resolve('1');
             } catch (e) {
+                console.log('transport:webusb:acquire: catch', e);
                 // ignore
                 if (i === 4) {
                     throw e;
                 }
             }
         }
+        console.log('transport: webusb: should not get here');
+
         return Promise.resolve('??');
     }
 
     async _connectIn(path: string, first: boolean) {
-        console.log('_connectIn: path, first', path, first);
         const device: USBDevice = this._findDevice(path);
         await device.open();
 
@@ -259,6 +258,7 @@ export class WebUsbTransport extends Transport {
 
         const interfaceId = INTERFACE_ID;
         await device.claimInterface(interfaceId);
+        console.log('transport:webusb:_connectIn done');
     }
 
     // todo: params different meaning from bridge

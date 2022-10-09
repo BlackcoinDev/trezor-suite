@@ -45,6 +45,14 @@ export default class WebUsbPlugin {
         }
     }
 
+    async enumerate() {
+        console.log('transport: webusb: enumerate');
+        return (await this._listDevices()).map(info => ({
+            path: info.path,
+            debug: info.debug,
+        }));
+    }
+
     _deviceHasDebugLink(device: USBDevice) {
         try {
             const iface = device.configurations[0].interfaces[DEBUG_INTERFACE_ID].alternates[0];
@@ -97,13 +105,6 @@ export default class WebUsbPlugin {
     }
 
     _lastDevices: Array<{ path: string; device: USBDevice; debug: boolean }> = [];
-
-    async enumerate() {
-        return (await this._listDevices()).map(info => ({
-            path: info.path,
-            debug: info.debug,
-        }));
-    }
 
     _findDevice(path: string) {
         const deviceO = this._lastDevices.find(d => d.path === path);

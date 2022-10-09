@@ -13,7 +13,7 @@ describe('Onboarding - transport webusb/bridge', () => {
             .its('store')
             .invoke('getState')
             .should(state => {
-                expect(state?.suite.transport?.type).to.deep.eq('WebUsbPlugin');
+                expect(state?.suite.transport?.type).to.deep.eq('WebusbTransport');
             });
 
         cy.getTestElement('@onboarding/expand-troubleshooting-tips').click();

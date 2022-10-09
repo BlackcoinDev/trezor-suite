@@ -4,7 +4,7 @@ const fixtures = [
     {
         description: `Transport is webusb`,
         transport: {
-            type: 'WebUsbPlugin',
+            type: 'WebusbTransport',
         },
         result: true,
     },
