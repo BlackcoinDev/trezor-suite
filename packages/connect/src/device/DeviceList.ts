@@ -286,6 +286,8 @@ export class DeviceList extends EventEmitter {
     }
 
     enumerate() {
+        console.log('DeviceList.enumerate ==> !!! =>> !!!!');
+
         // this.stream.enumerate();
         // if (!this.stream.current) return;
         // update current values

@@ -326,9 +326,14 @@ export class Device extends EventEmitter {
             this.keepSession = true;
         }
 
+        /**
+         * TODO TODO TODO TODO TODO:
+         * ignoring sessions for now
+         * not awaiting
+         */
         console.log('_runInner await this.deferredActions[DEVICE.ACQUIRE].promise;');
         // wait for event from trezor-link
-        await this.deferredActions[DEVICE.ACQUIRE].promise;
+        // await this.deferredActions[DEVICE.ACQUIRE].promise;
         console.log('_runInner await done');
 
         // call inner function
