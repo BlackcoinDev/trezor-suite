@@ -228,6 +228,7 @@ export class Device extends EventEmitter {
         options = parseRunOptions(options);
 
         this.runPromise = createDeferred(this._runInner.bind(this, fn, options));
+
         return this.runPromise.promise;
     }
 
@@ -271,7 +272,10 @@ export class Device extends EventEmitter {
     }
 
     async _runInner<X>(fn: (() => Promise<X>) | undefined, options: RunOptions): Promise<void> {
+        console.log('__runInner this.isUsedHere()', this.isUsedHere());
+
         if (!this.isUsedHere() || this.commands.disposed || !this.getExternalState()) {
+            console.log('__runInner acquire()');
             // acquire session
             await this.acquire();
 
@@ -296,6 +300,7 @@ export class Device extends EventEmitter {
                     ]);
                 }
             } catch (error) {
+                console.log('_runInner catch error=', error);
                 if (!this.inconsistent && error.message === 'GetFeatures timeout') {
                     // handling corner-case T1 + bootloader < 1.4.0 (above)
                     // if GetFeatures fails try again
@@ -321,8 +326,10 @@ export class Device extends EventEmitter {
             this.keepSession = true;
         }
 
+        console.log('_runInner await this.deferredActions[DEVICE.ACQUIRE].promise;');
         // wait for event from trezor-link
         await this.deferredActions[DEVICE.ACQUIRE].promise;
+        console.log('_runInner await done');
 
         // call inner function
         if (fn) {
@@ -500,6 +507,17 @@ export class Device extends EventEmitter {
         const originalSession = this.originalDescriptor.session;
         const upcomingSession = upcomingDescriptor.session;
 
+        console.log(
+            'Device: ',
+            'updateDescriptor',
+            'currentSession',
+            originalSession,
+            'upcoming',
+            upcomingSession,
+            'lastUsedID',
+            this.activitySessionID,
+        );
+
         _log.debug(
             'updateDescriptor',
             'currentSession',
@@ -512,6 +530,7 @@ export class Device extends EventEmitter {
 
         if (!originalSession && !upcomingSession && !this.activitySessionID) {
             // no change
+            console.log('Device: updateDescriptors, return');
             return;
         }
 

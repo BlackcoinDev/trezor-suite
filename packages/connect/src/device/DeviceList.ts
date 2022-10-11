@@ -118,11 +118,11 @@ export class DeviceList extends EventEmitter {
             const isNode =
                 !!process?.release?.name && process.release.name.search(/node|io\.js/) !== -1;
             setTransportFetch(fetchWithSignal, isNode);
-            transports.push(bridge);
+            // transports.push(bridge);
         }
 
         // if (webusb) {
-        // transports.push(new WebUsbTransport({ messages: this.messages }));
+        transports.push(new WebUsbTransport({ messages: this.messages }));
         // }
 
         this.transports = transports.sort((a, b) => a.priority - b.priority);
@@ -170,11 +170,6 @@ export class DeviceList extends EventEmitter {
                 this.emit(TRANSPORT.ERROR, error);
                 // stream.stop();
             });
-
-            // ???/
-            // this.transport.on(DEVICE.CONNECT, dev => {
-            //     this.emit(DEVICE.CONNECT, dev);
-            // });
 
             console.log('DeviceList, init, transport.listen()');
             this.transport.listen();
@@ -405,7 +400,9 @@ class CreateDeviceHandler {
         console.log('DeviceList, _takeAndCreateDevice device', device);
 
         this.list.devices[this.path] = device;
-        await device.run();
+        const promise = device.run();
+
+        await promise;
         console.log('DeviceList, _takeAndCreateDevice. run completed, emit DEVICE.CONNECT');
         this.list.emit(DEVICE.CONNECT, device.toMessageObject());
     }
