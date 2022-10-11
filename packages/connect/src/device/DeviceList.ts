@@ -7,6 +7,7 @@ import EventEmitter from 'events';
 import {
     BridgeTransport,
     WebUsbTransport,
+    NodeUsbTransport,
     Transport,
     TrezorDeviceInfoWithSession as DeviceDescriptor,
     getAvailableTransport,
@@ -122,8 +123,9 @@ export class DeviceList extends EventEmitter {
         }
 
         // if (webusb) {
-        transports.push(new WebUsbTransport({ messages: this.messages }));
+        // transports.push(new WebUsbTransport({ messages: this.messages }));
         // }
+        transports.push(new NodeUsbTransport({ messages: this.messages }));
 
         this.transports = transports.sort((a, b) => a.priority - b.priority);
     }

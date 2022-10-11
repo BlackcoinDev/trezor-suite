@@ -16,6 +16,7 @@ export { Messages } from './types';
 
 export { BridgeTransport } from './transports/bridge';
 export { WebUsbTransport } from './transports/webusb';
+export { NodeUsbTransport } from './transports/nodeusb';
 
 export { getAvailableTransport } from './utils/getAvailableTransport';
 

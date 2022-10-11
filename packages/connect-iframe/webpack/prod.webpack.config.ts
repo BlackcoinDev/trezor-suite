@@ -78,6 +78,10 @@ export default {
             crypto: require.resolve('crypto-browserify'), // required by multiple dependencies
             stream: require.resolve('stream-browserify'), // required by utxo-lib and keccak
             events: require.resolve('events'),
+            // nodeusb, but it should't be needed, since it is only in desktop
+            path: require.resolve('path-browserify'),
+            // nodeusb
+            os: require.resolve('os-browserify/browser'),
         },
     },
     performance: {

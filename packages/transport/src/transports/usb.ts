@@ -52,7 +52,7 @@ export class UsbTransport extends Transport {
             this._onListenResult(devices);
         };
 
-        this.usbInterface.addEventListener('connect', onConnect);
+        this.usbInterface.on('connect', onConnect);
 
         return Promise.resolve([]);
         // return this.enumerate();
@@ -99,8 +99,9 @@ export class UsbTransport extends Transport {
     }
 
     async _listDevices() {
+        console.log('_list devices ===== <<< >>> ');
         const devices = await this.usbInterface.getDevices();
-
+        console.log('devices', devices);
         // this._lastDevices = nonHidDevices.map(device => {
         //     // path is just serial number
         //     // more bootloaders => number them, hope for the best
