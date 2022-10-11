@@ -3,7 +3,10 @@
 import { Transport } from './abstract';
 import { UsbTransport } from './usb';
 
-import { webusb, usb, WebUSB } from 'usb';
+import { WebUSB } from 'usb';
+
+// notes:
+// to make it work I needed to run `sudo chmod -R 777 /dev/bus/usb/`
 
 export class NodeUsbTransport extends UsbTransport {
     name = 'NodeUsbTransport';
@@ -14,25 +17,8 @@ export class NodeUsbTransport extends UsbTransport {
         super({
             messages,
             usbInterface: new WebUSB({
-                allowAllDevices: true,
+                allowAllDevices: true, // return all devices, not only authorized
             }),
         });
-    }
-
-    // @ts-ignore
-    listen() {
-        const onConnect = async (_event: USBConnectionEvent) => {
-            console.log('=== >< < > > onConnect');
-            const devices = await this.usbInterface.getDevices();
-            // const devices = await this._listDevices();
-            console.log('transport: nodeusb: listen result', devices);
-
-            this._onListenResult(devices);
-        };
-        // @ts-ignore
-        usb.on('attach', onConnect);
-
-        return Promise.resolve([]);
-        // return this.enumerate();
     }
 }

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /// <reference types="w3c-web-usb" />
 
 import { EventEmitter } from 'events';
@@ -13,6 +14,8 @@ import {
     T1HID_VENDOR,
     TREZOR_DESCS,
 } from '../constants';
+
+import { WebUSB } from 'usb';
 
 type UsbTransportConstructorParams = ConstructorParameters<typeof Transport>[0] & {
     usbInterface: any; // this.usbInterface | nodeusb
@@ -47,23 +50,38 @@ export class UsbTransport extends Transport {
         const onConnect = async (_event: USBConnectionEvent) => {
             // this._listDevices();
             const devices = await this._listDevices();
-            console.log('transport: webusb: listen result', devices);
 
             this._onListenResult(devices);
         };
 
-        this.usbInterface.on('connect', onConnect);
+        console.log('this.usbInterface', this.usbInterface);
+        this.usbInterface.onconnect = onConnect;
 
         return Promise.resolve([]);
         // return this.enumerate();
     }
 
     async enumerate() {
-        console.log('transport: webusb: enumerate');
-
-        return (await this._listDevices()).map(info => ({
+        // console.log('transport: webusb: enumerate');
+        const result = await this._listDevices();
+        return result.map(info => ({
             path: info.path,
         }));
+
+        // const customWebUSB = new WebUSB({
+        //     // Bypass cheking for authorised devices
+        //     allowAllDevices: true,
+        // });
+
+        // // Uses blocking calls, so is async
+        // const allDevices = await customWebUSB.getDevices();
+        // const devices = allDevices.filter(
+        //     (device: any) => device.vendorId === 4617 && device.productId === 21441,
+        // );
+
+        // console.log('devices', devices);
+
+        // return devices;
     }
 
     _deviceIsHid(device: USBDevice) {
@@ -99,9 +117,7 @@ export class UsbTransport extends Transport {
     }
 
     async _listDevices() {
-        console.log('_list devices ===== <<< >>> ');
         const devices = await this.usbInterface.getDevices();
-        console.log('devices', devices);
         // this._lastDevices = nonHidDevices.map(device => {
         //     // path is just serial number
         //     // more bootloaders => number them, hope for the best
@@ -136,7 +152,6 @@ export class UsbTransport extends Transport {
         if (deviceO == null) {
             throw new Error('Action was interrupted.');
         }
-        console.log('deviceO', deviceO);
         return deviceO.device;
     }
 

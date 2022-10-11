@@ -18,8 +18,6 @@ export { Messages } from './types';
 export { BridgeTransport } from './transports/bridge';
 // web only
 export { WebUsbTransport } from './transports/webusb';
-// node only
-export { NodeUsbTransport } from './transports/nodeusb';
 
 export { getAvailableTransport } from './utils/getAvailableTransport';
 

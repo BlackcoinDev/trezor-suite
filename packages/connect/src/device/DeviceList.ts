@@ -123,7 +123,9 @@ export class DeviceList extends EventEmitter {
         }
 
         // if (webusb) {
-        // transports.push(new WebUsbTransport({ messages: this.messages }));
+        // transports.push(
+        //     // new WebUsbTransport({ messages: this.messages, usbInterface: navigator.usb }),
+        // );
         // }
         transports.push(new NodeUsbTransport({ messages: this.messages }));
 
