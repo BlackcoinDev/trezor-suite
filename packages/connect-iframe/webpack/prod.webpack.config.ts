@@ -32,15 +32,15 @@ export default {
                     },
                 },
             },
-            {
-                test: /sharedConnectionWorker/i,
-                loader: 'worker-loader',
-                issuer: /workers\/workers-*/i, // replace import ONLY in /workers\/workers- not @trezor/transport
-                options: {
-                    worker: 'SharedWorker',
-                    filename: './workers/shared-connection-worker.[contenthash].js',
-                },
-            },
+            // {
+            //     test: /sharedConnectionWorker/i,
+            //     loader: 'worker-loader',
+            //     issuer: /workers\/workers-*/i, // replace import ONLY in /workers\/workers- not @trezor/transport
+            //     options: {
+            //         worker: 'SharedWorker',
+            //         filename: './workers/shared-connection-worker.[contenthash].js',
+            //     },
+            // },
             {
                 test: /\workers\/blockbook\/index/i,
                 loader: 'worker-loader',
@@ -79,9 +79,9 @@ export default {
             stream: require.resolve('stream-browserify'), // required by utxo-lib and keccak
             events: require.resolve('events'),
             // nodeusb, but it should't be needed, since it is only in desktop
-            path: require.resolve('path-browserify'),
+            // path: require.resolve('path-browserify'),
             // nodeusb
-            os: require.resolve('os-browserify/browser'),
+            // os: require.resolve('os-browserify/browser'),
         },
     },
     performance: {
@@ -102,6 +102,9 @@ export default {
         new webpack.NormalModuleReplacementPlugin(/\/utils\/assets$/, resource => {
             resource.request = resource.request.replace(/assets$/, 'assets-browser');
         }),
+        // resolve @trezor/transport module as "browser"
+        // ? ???
+
         // copy public files
         new CopyWebpackPlugin({
             patterns: [

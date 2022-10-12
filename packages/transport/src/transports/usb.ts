@@ -22,7 +22,6 @@ type UsbTransportConstructorParams = ConstructorParameters<typeof Transport>[0] 
 };
 
 export class UsbTransport extends Transport {
-    name = 'WebusbTransport';
     requestNeeded = true;
     unreadableHidDevice = false;
     unreadableHidDeviceChange = new EventEmitter();
@@ -35,7 +34,7 @@ export class UsbTransport extends Transport {
     }
 
     init() {
-        console.log('transport. webusb. init');
+        console.log('transport. usb. init');
         if (!this.usbInterface) {
             throw new Error('WebUSB is not available on this browser.');
         }
@@ -46,42 +45,29 @@ export class UsbTransport extends Transport {
     }
 
     listen() {
-        console.log('transport: webusb: listen');
+        console.log('transport: usb: listen');
         const onConnect = async (_event: USBConnectionEvent) => {
             // this._listDevices();
             const devices = await this._listDevices();
-
             this._onListenResult(devices);
         };
 
-        console.log('this.usbInterface', this.usbInterface);
         this.usbInterface.onconnect = onConnect;
+        this.usbInterface.ondisconnect = onConnect;
 
         return Promise.resolve([]);
-        // return this.enumerate();
     }
 
     async enumerate() {
-        // console.log('transport: webusb: enumerate');
-        const result = await this._listDevices();
-        return result.map(info => ({
+        console.log('transport: webusb: enumerate');
+        const devices = await this._listDevices();
+        console.log('transport: webusb: enumerate devices=', devices);
+
+        this._onListenResult(devices);
+
+        return devices.map(info => ({
             path: info.path,
         }));
-
-        // const customWebUSB = new WebUSB({
-        //     // Bypass cheking for authorised devices
-        //     allowAllDevices: true,
-        // });
-
-        // // Uses blocking calls, so is async
-        // const allDevices = await customWebUSB.getDevices();
-        // const devices = allDevices.filter(
-        //     (device: any) => device.vendorId === 4617 && device.productId === 21441,
-        // );
-
-        // console.log('devices', devices);
-
-        // return devices;
     }
 
     _deviceIsHid(device: USBDevice) {

@@ -45,11 +45,8 @@ type DeviceDescriptorDiff = {
     connected: DeviceDescriptor[];
     disconnected: DeviceDescriptor[];
     changedSessions: DeviceDescriptor[];
-    // changedDebugSessions: DeviceDescriptor[];
     acquired: DeviceDescriptor[];
-    // debugAcquired: DeviceDescriptor[];
     released: DeviceDescriptor[];
-    // debugReleased: DeviceDescriptor[];
     descriptors: DeviceDescriptor[];
 };
 
@@ -104,30 +101,31 @@ export class DeviceList extends EventEmitter {
         const transports: Transport[] = [];
         this.messages = DataManager.getProtobufMessages();
 
+        const isNode =
+            !!process?.release?.name && process.release.name.search(/node|io\.js/) !== -1;
+
         if (env === 'react-native' && typeof ReactNativeUsbPlugin !== 'undefined') {
             transports.push(ReactNativeUsbPlugin());
-        } else {
+            //} else {
             // const bridgeLatestVersion = getBridgeInfo().version.join('.');
-            const bridge = new BridgeTransport({ messages: this.messages });
-            // bridge.setBridgeLatestVersion(bridgeLatestVersion);
-            this.fetchController = getAbortController();
-            const { signal } = this.fetchController;
-            // @ts-expect-error TODO: https://github.com/trezor/trezor-suite/issues/5332
-            const fetchWithSignal = (args, options = {}) => fetch(args, { ...options, signal });
-            // detection of environment browser/node
-            // todo: code should not be detecting environment itself. imho it should be built with this information passed from build process maybe?
-            const isNode =
-                !!process?.release?.name && process.release.name.search(/node|io\.js/) !== -1;
-            setTransportFetch(fetchWithSignal, isNode);
+            // console.log('this messages', this.messages);
+            // const bridge = new BridgeTransport({ messages: this.messages });
+            // // bridge.setBridgeLatestVersion(bridgeLatestVersion);
+            // this.fetchController = getAbortController();
+            // const { signal } = this.fetchController;
+            // // @ts-expect-error TODO: https://github.com/trezor/trezor-suite/issues/5332
+            // const fetchWithSignal = (args, options = {}) => fetch(args, { ...options, signal });
+            // // detection of environment browser/node
+            // // todo: code should not be detecting environment itself. imho it should be built with this information passed from build process maybe?
+            // setTransportFetch(fetchWithSignal, isNode);
             // transports.push(bridge);
+        } else if (isNode) {
+            transports.push(new NodeUsbTransport({ messages: this.messages }));
+        } else if (webusb) {
+            transports.push(new WebUsbTransport({ messages: this.messages }));
+        } else {
+            // maybe bridge here?
         }
-
-        // if (webusb) {
-        // transports.push(
-        //     // new WebUsbTransport({ messages: this.messages, usbInterface: navigator.usb }),
-        // );
-        // }
-        transports.push(new NodeUsbTransport({ messages: this.messages }));
 
         this.transports = transports.sort((a, b) => a.priority - b.priority);
     }
@@ -140,7 +138,6 @@ export class DeviceList extends EventEmitter {
 
             let lastError: any = null;
 
-            console.log('DeviceList, this.transports.lenght', this.transports);
             for (const transport of this.transports) {
                 try {
                     this.transport = transport;
@@ -175,8 +172,11 @@ export class DeviceList extends EventEmitter {
                 // stream.stop();
             });
 
+            // todo: add some mutex lock so that multiple implementators don't try to access usb
+            // await this.transport.enumerate();
+
             console.log('DeviceList, init, transport.listen()');
-            this.transport.listen();
+            await this.transport.listen();
 
             // listen for self emitted events and resolve pending transport event if needed
             this.on(DEVICE.CONNECT, this.resolveTransportEvent.bind(this));

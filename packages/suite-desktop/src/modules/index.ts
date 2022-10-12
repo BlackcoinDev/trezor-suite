@@ -22,7 +22,7 @@ const MODULES = [
     'theme',
     'http-receiver',
     'metadata',
-    'bridge',
+    // 'bridge',
     'custom-protocols',
     'auto-updater',
     'store',

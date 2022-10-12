@@ -15,7 +15,10 @@
         "transport"
     ],
     "main": "./lib/index.js",
-    "browser": "./lib/index.browser.js",
+    "browser": {
+        "./lib/transports/nodeusb": "./lib/transports/nodeusb.browser",
+        "./lib/transports/webusb": "./lib/transports/webusb.browser"
+    },
     "files": [
         "lib/",
         "!**/*.map",

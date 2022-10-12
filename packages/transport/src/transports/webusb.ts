@@ -1,8 +1,5 @@
-import { Transport } from './abstract';
-import { UsbTransport } from './usb';
-
-export class WebUsbTransport extends UsbTransport {
-    constructor({ messages }: ConstructorParameters<typeof Transport>[0]) {
-        super({ messages, usbInterface: navigator.usb });
+export class WebUsbTransport {
+    constructor() {
+        throw new Error('WebUsbTransport can not be used in node environment');
     }
 }

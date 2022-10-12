@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 // testing build. yarn workspace @trezor/transport build:lib is a required step therefore
-import { BridgeTransport } from '../../lib';
+import { BridgeTransport, setFetch } from '../../lib';
 import messages from '../../messages.json';
 
 import { TrezorUserEnvLink } from '@trezor/trezor-user-env-link';
@@ -43,9 +43,10 @@ describe('bridge', () => {
                 await TrezorUserEnvLink.send({ type: 'emulator-setup', ...emulatorSetupOpts });
                 await TrezorUserEnvLink.send({ type: 'bridge-start', version: bridgeVersion });
 
-                BridgeTransport.setFetch(fetch, true);
+                setFetch(fetch, true);
 
-                bridge = new BridgeTransport({ messages });
+                // @ts-ignore
+                bridge = new BridgeTransport({ messages: messages.nested });
 
                 await bridge.init();
 

@@ -8,7 +8,7 @@ import {
 } from '../types';
 
 type ConstructorParams = {
-    messages: JSON;
+    messages: Record<string, any>;
 };
 
 type Descriptor = { path: string };

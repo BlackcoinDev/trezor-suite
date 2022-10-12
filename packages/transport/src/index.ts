@@ -17,7 +17,7 @@ export { Messages } from './types';
 // web + node
 export { BridgeTransport } from './transports/bridge';
 // web only
-export { WebUsbTransport } from './transports/webusb';
+export { WebUsbTransport } from './transports/webusb.browser';
 // node only
 export { NodeUsbTransport } from './transports/nodeusb';
 
