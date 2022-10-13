@@ -1,4 +1,5 @@
 import produce from 'immer';
+import { CoinjoinStatusEvent } from '@trezor/coinjoin';
 import { STORAGE } from '@suite-actions/constants';
 import { createSelector } from '@reduxjs/toolkit';
 import * as COINJOIN from '@wallet-actions/constants/coinjoinConstants';
@@ -8,13 +9,11 @@ import { PartialRecord } from '@trezor/type-utils';
 import { breakdownCoinjoinBalance } from '@wallet-utils/coinjoinUtils';
 import { selectSelectedAccount } from './selectedAccountReducer';
 
-type Client = {
-    status: any[]; // TODO: Rounds from @trezor/coinjoin
-};
+export type CoinjoinClientInstance = Omit<CoinjoinStatusEvent, 'changed'>;
 
-type CoinjoinState = {
+export type CoinjoinState = {
     accounts: CoinjoinAccount[];
-    clients: PartialRecord<Account['symbol'], Client>;
+    clients: PartialRecord<Account['symbol'], CoinjoinClientInstance>;
 };
 
 export type CoinjoinRootState = {
@@ -93,7 +92,22 @@ const createClient = (
     const exists = draft.clients[action.symbol];
     if (exists) return;
     draft.clients[action.symbol] = {
-        status: [],
+        rounds: action.status.rounds,
+        feeRatesMedians: action.status.feeRatesMedians,
+        coordinatorFeeRate: action.status.coordinatorFeeRate,
+    };
+};
+
+const updateClientStatus = (
+    draft: CoinjoinState,
+    payload: ExtractActionPayload<typeof COINJOIN.CLIENT_STATUS>,
+) => {
+    const exists = draft.clients[payload.symbol];
+    if (!exists) return;
+    draft.clients[payload.symbol] = {
+        rounds: payload.status.rounds,
+        feeRatesMedians: payload.status.feeRatesMedians,
+        coordinatorFeeRate: payload.status.coordinatorFeeRate,
     };
 };
 
@@ -128,6 +142,9 @@ export const coinjoinReducer = (
                 break;
             case COINJOIN.CLIENT_DISABLE:
                 delete draft.clients[action.payload.symbol];
+                break;
+            case COINJOIN.CLIENT_STATUS:
+                updateClientStatus(draft, action.payload);
                 break;
 
             // no default
