@@ -7,6 +7,9 @@ import { app, ipcMain } from 'electron';
 import { createIpcProxyHandler, IpcProxyHandlerOptions } from '@trezor/ipc-proxy';
 import { CoinjoinBackend, CoinjoinClient } from '@trezor/coinjoin';
 
+import { CoinjoinProcess } from '../libs/processes/CoinjoinProcess';
+import { getFreePort } from '../libs/getFreePort';
+
 import type { Module } from './index';
 
 const SERVICE_NAME = '@trezor/coinjoin';
@@ -16,6 +19,8 @@ export const init: Module = ({ mainWindow }) => {
 
     const backends: CoinjoinBackend[] = [];
     const clients: CoinjoinClient[] = [];
+
+    const coinjoin = new CoinjoinProcess();
 
     logger.debug(SERVICE_NAME, `Starting service`);
 
@@ -42,7 +47,9 @@ export const init: Module = ({ mainWindow }) => {
     };
 
     const clientProxyOptions: IpcProxyHandlerOptions<CoinjoinClient> = {
-        onCreateInstance: (settings: ConstructorParameters<typeof CoinjoinClient>[0]) => {
+        onCreateInstance: async (settings: ConstructorParameters<typeof CoinjoinClient>[0]) => {
+            const port = await getFreePort();
+            settings.middlewareUrl = `http://127.0.0.1:${port}/Cryptography`;
             const client = new CoinjoinClient(settings);
             clients.push(client);
             return {
@@ -51,11 +58,16 @@ export const init: Module = ({ mainWindow }) => {
                     if (method === 'enable') {
                         logger.debug(SERVICE_NAME, `CoinjoinClient enable ${params}`);
                         const response = await client.enable();
-                        // TODO: start coinjoin middleware binary
-                        return response;
+                        try {
+                            await coinjoin.startOnPort(port);
+                            return response;
+                        } catch (err) {
+                            logger.error('coinjoin', `Start failed: ${err.message}`);
+                        }
+                    } else {
+                        // needs type casting
+                        return (client[method] as any)(...params); // bind method to instance context
                     }
-                    // needs type casting
-                    return (client[method] as any)(...params); // bind method to instance context
                 },
                 onAddListener: (eventName, listener) => {
                     logger.debug(SERVICE_NAME, `CoinjoinClient add listener ${eventName}`);
@@ -91,6 +103,8 @@ export const init: Module = ({ mainWindow }) => {
 
             unregisterBackendProxy();
             unregisterClientProxy();
+            logger.info('coinjoin', 'Stopping (app quit)');
+            coinjoin.stop();
         };
 
         app.on('before-quit', dispose);
