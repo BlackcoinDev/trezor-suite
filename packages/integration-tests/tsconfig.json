@@ -9,13 +9,12 @@
         ],
         "noEmit": true
     },
-    "include": ["**/*.ts", "**/*.js"],
+    "include": [
+        "**/*.ts",
+        "**/*.js",
+        "../suite-web/e2e/process-har.ts"
+    ],
     "references": [
-        {
-            "path": "../../suite-common/test-utils"
-        },
-        { "path": "../suite-analytics" },
-        { "path": "../trezor-user-env-link" },
-        { "path": "../utils" }
+        { "path": "../trezor-user-env-link" }
     ]
 }
