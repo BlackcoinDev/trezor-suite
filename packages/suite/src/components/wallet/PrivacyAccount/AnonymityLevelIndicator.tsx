@@ -1,9 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Icon, variables } from '@trezor/components';
+import { Translation } from '@suite-components';
 import { useSelector } from '@suite-hooks/useSelector';
 import { selectCurrentTargetAnonymity } from '@wallet-reducers/coinjoinReducer';
 import { darken } from 'polished';
+import { defaultColorVariant } from '@trezor/theme';
 
 const Container = styled.div`
     display: flex;
@@ -35,15 +37,42 @@ const AnonymityLevel = styled.p`
     font-variant-numeric: tabular-nums;
 `;
 
-const AnonymityStatus = styled.p`
-    color: ${({ theme }) => theme.TYPE_GREEN};
+const AnonymityStatus = styled.p<{ color: string }>`
+    color: ${({ color }) => color};
     font-size: ${variables.FONT_SIZE.TINY};
 `;
 
-enum AnomymityStatus {
-    Good = 'GOOD',
-    Great = 'GREAT',
-}
+const anonymityStatus = {
+    bad: {
+        label: <Translation id="TR_ANONYMITY_LEVEL_BAD" />,
+        color: defaultColorVariant.red,
+    },
+    medium: {
+        label: <Translation id="TR_ANONYMITY_LEVEL_MEDIUM" />,
+        color: defaultColorVariant.yellow,
+    },
+    good: {
+        label: <Translation id="TR_ANONYMITY_LEVEL_GOOD" />,
+        color: defaultColorVariant.green,
+    },
+    great: {
+        label: <Translation id="TR_ANONYMITY_LEVEL_GREAT" />,
+        color: defaultColorVariant.forest,
+    },
+};
+
+const getAnonymityStatus = (targetAnonymity: number) => {
+    if (targetAnonymity < 5) {
+        return anonymityStatus.bad;
+    }
+    if (targetAnonymity < 10) {
+        return anonymityStatus.medium;
+    }
+    if (targetAnonymity < 20) {
+        return anonymityStatus.good;
+    }
+    return anonymityStatus.great;
+};
 
 interface AnonymityLevelIndicatorProps {
     className?: string;
@@ -51,15 +80,24 @@ interface AnonymityLevelIndicatorProps {
 }
 
 export const AnonymityLevelIndicator = ({ className, onClick }: AnonymityLevelIndicatorProps) => {
-    const targetAnonymity = useSelector(selectCurrentTargetAnonymity);
+    const targetAnonymity = useSelector(selectCurrentTargetAnonymity) || 1;
+
+    const anonymityStatus = getAnonymityStatus(targetAnonymity);
 
     return (
         <Container className={className} onClick={onClick}>
             <Icon icon="USERS" />
 
             <Values>
-                <AnonymityLevel>{`1 in ${targetAnonymity}`}</AnonymityLevel>
-                <AnonymityStatus>{AnomymityStatus.Good}</AnonymityStatus>
+                <AnonymityLevel>
+                    <Translation
+                        id="TR_COINJOIN_ANONYMITY_LEVEL_INDICATOR"
+                        values={{ targetAnonymity }}
+                    />
+                </AnonymityLevel>
+                <AnonymityStatus color={anonymityStatus.color}>
+                    {anonymityStatus.label}
+                </AnonymityStatus>
             </Values>
         </Container>
     );

@@ -7465,4 +7465,24 @@ export default defineMessages({
         id: 'TR_COINJOIN_ANONYMITY_LEVEL_SETUP_DESCRIPTION',
         defaultMessage: 'Shows the number of people with whom your resources are indistinguishable',
     },
+    TR_COINJOIN_ANONYMITY_LEVEL_INDICATOR: {
+        id: 'TR_COINJOIN_ANONYMITY_LEVEL_INDICATOR',
+        defaultMessage: '1 in {targetAnonymity}',
+    },
+    TR_ANONYMITY_LEVEL_BAD: {
+        id: 'TR_ANONYMITY_LEVEL_BAD',
+        defaultMessage: 'BAD',
+    },
+    TR_ANONYMITY_LEVEL_MEDIUM: {
+        id: 'TR_ANONYMITY_LEVEL_MEDIUM',
+        defaultMessage: 'MEDIUM',
+    },
+    TR_ANONYMITY_LEVEL_GOOD: {
+        id: 'TR_ANONYMITY_LEVEL_GOOD',
+        defaultMessage: 'GOOD',
+    },
+    TR_ANONYMITY_LEVEL_GREAT: {
+        id: 'TR_ANONYMITY_LEVEL_GREAT',
+        defaultMessage: 'GREAT',
+    },
 });
