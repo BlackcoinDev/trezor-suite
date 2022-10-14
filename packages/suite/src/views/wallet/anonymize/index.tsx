@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 import { useSelector } from '@suite-hooks';
 import { WalletLayoutHeader } from '@wallet-components';
-import { AnonymityLevelIndicator } from '@wallet-components/PrivacyAccount/AnonymityLevelIndicator';
+import { AnonymityLevelSetup } from '@wallet-components/PrivacyAccount/AnonymityLevelSetup';
 import { CoinjoinSetupStrategies } from '@wallet-views/anonymize/components/CoinjoinSetupStrategies';
 import { WalletLayout } from '@wallet-components/WalletLayout';
 
@@ -18,7 +18,7 @@ const Anonymize = () => {
         <WalletLayout title="TR_NAV_ANONYMIZE" account={selectedAccount}>
             <WalletLayoutHeader title="TR_NAV_ANONYMIZE">
                 <AnynomityLevelSetupWrapper>
-                    <AnonymityLevelIndicator />
+                    <AnonymityLevelSetup />
                 </AnynomityLevelSetupWrapper>
             </WalletLayoutHeader>
             {selectedAccount.account && (

@@ -16,7 +16,7 @@ const coinjoinAccountCreate = (account: Account, targetAnonymity: number) =>
         targetAnonymity,
     } as const);
 
-const coinjoinAccountUpdateAnonymity = (key: string, targetAnonymity: number) =>
+export const coinjoinAccountUpdateAnonymity = (key: string, targetAnonymity: number) =>
     ({
         type: COINJOIN.ACCOUNT_UPDATE_TARGET_ANONYMITY,
         key,

@@ -7457,4 +7457,12 @@ export default defineMessages({
         id: 'TR_PAUSING',
         defaultMessage: 'Pausing',
     },
+    TR_COINJOIN_ANONYMITY_LEVEL_SETUP_TITLE: {
+        id: 'TR_COINJOIN_ANONYMITY_LEVEL_SETUP_TITLE',
+        defaultMessage: 'Desired anonymity level',
+    },
+    TR_COINJOIN_ANONYMITY_LEVEL_SETUP_DESCRIPTION: {
+        id: 'TR_COINJOIN_ANONYMITY_LEVEL_SETUP_DESCRIPTION',
+        defaultMessage: 'Shows the number of people with whom your resources are indistinguishable',
+    },
 });
