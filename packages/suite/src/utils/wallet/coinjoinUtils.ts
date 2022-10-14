@@ -60,8 +60,8 @@ export const breakdownCoinjoinBalance = ({
  * Transform from coordinator format to coinjoinReducer format `CoinjoinClientFeeRatesMedians`
  * array => object { name: value-in-vBytes }
  */
-export const transformFeeRatesMedians = (m: CoinjoinStatusEvent['feeRatesMedians']) => {
-    const [fast, recommended, slow] = m.map(f => f.medianFeeRate);
+export const transformFeeRatesMedians = (medians: CoinjoinStatusEvent['feeRatesMedians']) => {
+    const [fast, recommended, slow] = medians.map(m => m.medianFeeRate);
     // convert from kvBytes (kilo virtual bytes) to vBytes
     const kvB2vB = (v: number) => (v ? Math.round(v / 1000) : 1);
     return {
@@ -76,8 +76,8 @@ export const transformFeeRatesMedians = (m: CoinjoinStatusEvent['feeRatesMedians
  * - coordinatorFeeRate: multiplied by 10. representation of percentage value
  * - feeRatesMedians: array => object with values in vBytes
  */
-export const transformCoinjoinStatus = (e: CoinjoinStatusEvent) => ({
-    rounds: e.rounds.map(r => ({ id: r.id, phase: r.phase })),
-    coordinatorFeeRate: e.coordinatorFeeRate * 10,
-    feeRatesMedians: transformFeeRatesMedians(e.feeRatesMedians),
+export const transformCoinjoinStatus = (event: CoinjoinStatusEvent) => ({
+    rounds: event.rounds.map(r => ({ id: r.id, phase: r.phase })),
+    coordinatorFeeRate: event.coordinatorFeeRate * 10,
+    feeRatesMedians: transformFeeRatesMedians(event.feeRatesMedians),
 });
