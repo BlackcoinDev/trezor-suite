@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import styled from 'styled-components';
 import { Icon, variables } from '@trezor/components';
 import { Translation } from '@suite-components';
@@ -79,26 +79,28 @@ interface AnonymityLevelIndicatorProps {
     onClick?: () => void;
 }
 
-export const AnonymityLevelIndicator = ({ className, onClick }: AnonymityLevelIndicatorProps) => {
-    const targetAnonymity = useSelector(selectCurrentTargetAnonymity) || 1;
+export const AnonymityLevelIndicator = forwardRef<HTMLDivElement, AnonymityLevelIndicatorProps>(
+    ({ className, onClick }, ref) => {
+        const targetAnonymity = useSelector(selectCurrentTargetAnonymity) || 1;
 
-    const anonymityStatus = getAnonymityStatus(targetAnonymity);
+        const anonymityStatus = getAnonymityStatus(targetAnonymity);
 
-    return (
-        <Container className={className} onClick={onClick}>
-            <Icon icon="USERS" />
+        return (
+            <Container className={className} onClick={onClick} ref={ref}>
+                <Icon icon="USERS" />
 
-            <Values>
-                <AnonymityLevel>
-                    <Translation
-                        id="TR_COINJOIN_ANONYMITY_LEVEL_INDICATOR"
-                        values={{ targetAnonymity }}
-                    />
-                </AnonymityLevel>
-                <AnonymityStatus color={anonymityStatus.color}>
-                    {anonymityStatus.label}
-                </AnonymityStatus>
-            </Values>
-        </Container>
-    );
-};
+                <Values>
+                    <AnonymityLevel>
+                        <Translation
+                            id="TR_COINJOIN_ANONYMITY_LEVEL_INDICATOR"
+                            values={{ targetAnonymity }}
+                        />
+                    </AnonymityLevel>
+                    <AnonymityStatus color={anonymityStatus.color}>
+                        {anonymityStatus.label}
+                    </AnonymityStatus>
+                </Values>
+            </Container>
+        );
+    },
+);

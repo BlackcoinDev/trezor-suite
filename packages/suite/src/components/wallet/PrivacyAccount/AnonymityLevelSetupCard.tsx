@@ -1,8 +1,8 @@
-import React, { useRef } from 'react';
+import React, { forwardRef } from 'react';
 import styled from 'styled-components';
 import { Card, P } from '@trezor/components';
 import { Translation } from '@suite-components';
-import { useOnClickOutside } from '@trezor/react-utils';
+
 import { AnonymityLevelSlider } from './AnonymityLevelSlider';
 import { DROPDOWN_MENU } from '@trezor/components/src/config/animations';
 
@@ -24,15 +24,7 @@ const SliderWrapper = styled.div`
     padding-bottom: 10px;
 `;
 
-interface AnonymityLevelSetupProps {
-    onClickOutside: () => void;
-}
-
-export const AnonymityLevelSetupCard = ({ onClickOutside }: AnonymityLevelSetupProps) => {
-    const ref = useRef<HTMLDivElement>(null);
-
-    useOnClickOutside([ref], onClickOutside);
-
+export const AnonymityLevelSetupCard = forwardRef<HTMLDivElement, {}>(({}, ref) => {
     return (
         <Container ref={ref}>
             <SetupCard>
@@ -48,4 +40,4 @@ export const AnonymityLevelSetupCard = ({ onClickOutside }: AnonymityLevelSetupP
             </SetupCard>
         </Container>
     );
-};
+});
