@@ -73,7 +73,7 @@ export const AnonymityLevelSlider = ({ className }: AnonymityLevelSliderProps) =
             coinjoinAccountUpdateAnonymity(currentAccount?.key ?? '', getValue(position));
             setSliderPosition(position);
         },
-        [coinjoinAccountUpdateAnonymity],
+        [coinjoinAccountUpdateAnonymity, currentAccount?.key],
     );
 
     if (!currentAccount) {
@@ -82,7 +82,12 @@ export const AnonymityLevelSlider = ({ className }: AnonymityLevelSliderProps) =
 
     return (
         <Container className={className}>
-            <Slider value={sliderPosition} onChange={handleSliderChange} trackStyle={trackStyle} />
+            <Slider
+                value={sliderPosition}
+                onChange={handleSliderChange}
+                trackStyle={trackStyle}
+                step={0.1}
+            />
             <LabelsWrapper>
                 <Label>1</Label>
                 <Label>3</Label>
