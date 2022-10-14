@@ -1,20 +1,29 @@
 import produce from 'immer';
-import { CoinjoinStatusEvent } from '@trezor/coinjoin';
 import { STORAGE } from '@suite-actions/constants';
 import { createSelector } from '@reduxjs/toolkit';
 import * as COINJOIN from '@wallet-actions/constants/coinjoinConstants';
-import { Account, CoinjoinAccount } from '@suite-common/wallet-types';
+import { Account, CoinjoinAccount, RoundPhase } from '@suite-common/wallet-types';
 import { Action } from '@suite-types';
 import { PartialRecord } from '@trezor/type-utils';
-import { breakdownCoinjoinBalance } from '@wallet-utils/coinjoinUtils';
+import { breakdownCoinjoinBalance, transformCoinjoinStatus } from '@wallet-utils/coinjoinUtils';
 import { selectSelectedAccount } from './selectedAccountReducer';
 
-export type CoinjoinClientInstance = Omit<CoinjoinStatusEvent, 'changed'>;
+export interface CoinjoinClientFeeRatesMedians {
+    fast: number;
+    recommended: number;
+    slow: number;
+}
 
-export type CoinjoinState = {
+export interface CoinjoinClientInstance {
+    rounds: { id: string; phase: RoundPhase }[]; // store only slice of Round in reducer. may be extended in the future
+    feeRatesMedians: CoinjoinClientFeeRatesMedians;
+    coordinatorFeeRate: number;
+}
+
+export interface CoinjoinState {
     accounts: CoinjoinAccount[];
     clients: PartialRecord<Account['symbol'], CoinjoinClientInstance>;
-};
+}
 
 export type CoinjoinRootState = {
     wallet: {
@@ -87,15 +96,11 @@ const stopSession = (
 
 const createClient = (
     draft: CoinjoinState,
-    action: ExtractActionPayload<typeof COINJOIN.CLIENT_ENABLE_SUCCESS>,
+    payload: ExtractActionPayload<typeof COINJOIN.CLIENT_ENABLE_SUCCESS>,
 ) => {
-    const exists = draft.clients[action.symbol];
+    const exists = draft.clients[payload.symbol];
     if (exists) return;
-    draft.clients[action.symbol] = {
-        rounds: action.status.rounds,
-        feeRatesMedians: action.status.feeRatesMedians,
-        coordinatorFeeRate: action.status.coordinatorFeeRate,
-    };
+    draft.clients[payload.symbol] = transformCoinjoinStatus(payload.status);
 };
 
 const updateClientStatus = (
@@ -104,11 +109,7 @@ const updateClientStatus = (
 ) => {
     const exists = draft.clients[payload.symbol];
     if (!exists) return;
-    draft.clients[payload.symbol] = {
-        rounds: payload.status.rounds,
-        feeRatesMedians: payload.status.feeRatesMedians,
-        coordinatorFeeRate: payload.status.coordinatorFeeRate,
-    };
+    draft.clients[payload.symbol] = transformCoinjoinStatus(payload.status);
 };
 
 export const coinjoinReducer = (

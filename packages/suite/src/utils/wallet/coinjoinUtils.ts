@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { CoinjoinStatusEvent } from '@trezor/coinjoin';
 import { getUtxoOutpoint } from '@suite-common/wallet-utils';
 import { Account } from '@suite-common/wallet-types';
 
@@ -54,3 +55,28 @@ export const breakdownCoinjoinBalance = ({
 
     return balanceBreakdown;
 };
+
+/**
+ * Transform from coordinator format to coinjoinReducer format `CoinjoinClientFeeRatesMedians`
+ * array => object { name: value-in-vbytes }
+ */
+export const transformFeeRatesMedians = (m: CoinjoinStatusEvent['feeRatesMedians']) => {
+    const [fast, recommended, slow] = m.map(f => f.medianFeeRate);
+    const kb2b = (v: number) => (v ? Math.round(v / 1000) : 1);
+    return {
+        fast: kb2b(fast) * 2, // NOTE: this calculation will be smarter once have enough data
+        recommended: kb2b(recommended),
+        slow: kb2b(slow),
+    };
+};
+
+/**
+ * Transform from coordinator format to coinjoinReducer format `CoinjoinClientInstance`
+ * - coordinatorFeeRate: multiplied by 10. representation of percentage value
+ * - feeRatesMedians: array => object with values in vbytes
+ */
+export const transformCoinjoinStatus = (e: CoinjoinStatusEvent) => ({
+    rounds: e.rounds.map(r => ({ id: r.id, phase: r.phase })),
+    coordinatorFeeRate: e.coordinatorFeeRate * 10,
+    feeRatesMedians: transformFeeRatesMedians(e.feeRatesMedians),
+});
