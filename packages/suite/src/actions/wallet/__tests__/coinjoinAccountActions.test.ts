@@ -20,7 +20,13 @@ jest.mock('@suite/services/coinjoin/coinjoinClient', () => {
                         settings: { coordinatorName: '' },
                         on: jest.fn(),
                         off: jest.fn(),
-                        enable: jest.fn(() => Promise.resolve({ rounds: [{ id: '00' }] })),
+                        enable: jest.fn(() =>
+                            Promise.resolve({
+                                rounds: [{ id: '00', phase: 0 }],
+                                feeRatesMedians: [],
+                                coordinatorFeeRate: 0.003,
+                            }),
+                        ),
                         registerAccount: jest.fn(),
                         unregisterAccount: jest.fn(),
                     };
