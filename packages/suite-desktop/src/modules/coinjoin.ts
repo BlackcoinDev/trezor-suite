@@ -49,7 +49,7 @@ export const init: Module = ({ mainWindow }) => {
     const clientProxyOptions: IpcProxyHandlerOptions<CoinjoinClient> = {
         onCreateInstance: async (settings: ConstructorParameters<typeof CoinjoinClient>[0]) => {
             let port: number;
-            if (!(await coinjoinMiddleware.status()).service) {
+            if (!(await coinjoinMiddleware.status()).process) {
                 port = await getFreePort();
             } else {
                 port = coinjoinMiddleware.port;
