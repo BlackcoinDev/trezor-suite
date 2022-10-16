@@ -456,6 +456,7 @@ export const initCoinjoinClient =
             dispatch(clientEnableSuccess(symbol, status));
             return client;
         } catch (error) {
+            CoinjoinClientService.removeInstance(symbol);
             dispatch(clientEnableFailed(symbol));
             dispatch(
                 addToast({

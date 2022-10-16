@@ -204,17 +204,17 @@ export const createCoinjoinAccount =
 
         const { coinjoinServerEnvironment } = getState().suite.settings.debug;
 
-        // initialize @trezor/coinjoin backend
-        if (!CoinjoinBackendService.getInstance(network.symbol)) {
-            await CoinjoinBackendService.createInstance(network.symbol, coinjoinServerEnvironment);
-        }
-
         // initialize @trezor/coinjoin client
         const client = await dispatch(
             initCoinjoinClient(network.symbol, coinjoinServerEnvironment),
         );
         if (!client) {
             return;
+        }
+
+        // initialize @trezor/coinjoin backend
+        if (!CoinjoinBackendService.getInstance(network.symbol)) {
+            await CoinjoinBackendService.createInstance(network.symbol, coinjoinServerEnvironment);
         }
 
         const { device } = getState().suite;
