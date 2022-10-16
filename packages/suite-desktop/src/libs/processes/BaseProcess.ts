@@ -133,13 +133,31 @@ export abstract class BaseProcess {
             `- Params: ${params}`,
             `- CWD: ${processDir}`,
         ]);
-        this.process = spawn(processPath, params, {
-            cwd: processDir,
-            env: processEnv,
-            stdio: ['ignore', 'ignore', 'ignore'],
+
+        return new Promise<void>((resolve, reject) => {
+            const newProcess = spawn(processPath, params, {
+                cwd: processDir,
+                env: processEnv,
+                stdio: ['ignore', 'ignore', 'ignore'],
+            });
+            newProcess.on('error', err => this.onError(err));
+            newProcess.on('exit', code => this.onExit(code));
+
+            let resolveTimeout: ReturnType<typeof setTimeout> | undefined;
+            const spawnErrorHandler = (message: any) => {
+                clearTimeout(resolveTimeout);
+                reject(new Error(`Process ${this.processName} not started. ${message}`));
+            };
+
+            newProcess.once('error', spawnErrorHandler);
+            newProcess.once('exit', spawnErrorHandler);
+
+            resolveTimeout = setTimeout(() => {
+                newProcess.removeListener('exit', spawnErrorHandler);
+                newProcess.removeListener('error', spawnErrorHandler);
+                resolve();
+            }, 100);
         });
-        this.process.on('error', err => this.onError(err));
-        this.process.on('exit', code => this.onExit(code));
     }
 
     /**
