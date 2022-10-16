@@ -52,6 +52,9 @@ export const getInitialState = () => ({
     suite: {
         locks: [],
         device: DEVICE,
+        settings: {
+            debug: {},
+        },
     },
     devices: [DEVICE],
     wallet: {
