@@ -5,11 +5,18 @@ export class CoinjoinProcess extends BaseProcess {
 
     constructor() {
         super('coinjoin', 'WalletWasabi.WabiSabiClientLibrary', {
-            startupCooldown: 3,
+            autoRestart: 0,
         });
     }
 
     async status(): Promise<Status> {
+        if (!this.process) {
+            return {
+                service: false,
+                process: false,
+            };
+        }
+
         // service
         try {
             const resp = await fetch(
