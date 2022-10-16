@@ -5,7 +5,7 @@ export type Environment = 'desktop' | 'web' | 'mobile' | '';
 export type InitOptions = {
     sessionId?: string;
     instanceId?: string;
-    environment: Environment;
+    environment?: Environment;
     isDev: boolean;
     commitId: string;
     callbacks?: {
