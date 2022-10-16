@@ -202,13 +202,17 @@ export const createCoinjoinAccount =
             throw new Error('createCoinjoinAccount: invalid account type');
         }
 
+        const { coinjoinServerEnvironment } = getState().suite.settings.debug;
+
         // initialize @trezor/coinjoin backend
         if (!CoinjoinBackendService.getInstance(network.symbol)) {
-            await CoinjoinBackendService.createInstance(network.symbol);
+            await CoinjoinBackendService.createInstance(network.symbol, coinjoinServerEnvironment);
         }
 
         // initialize @trezor/coinjoin client
-        const client = await dispatch(initCoinjoinClient(network.symbol));
+        const client = await dispatch(
+            initCoinjoinClient(network.symbol, coinjoinServerEnvironment),
+        );
         if (!client) {
             return;
         }
@@ -407,7 +411,9 @@ export const forgetCoinjoinAccounts =
     };
 
 export const restoreCoinjoin = () => (dispatch: Dispatch, getState: GetState) => {
-    const { accounts, coinjoin } = getState().wallet;
+    const { wallet, suite } = getState();
+    const { accounts, coinjoin } = wallet;
+    const { coinjoinServerEnvironment } = suite.settings.debug;
 
     // find all networks to restore
     const coinjoinNetworks = coinjoin.accounts.reduce((res, cjAccount) => {
@@ -432,9 +438,9 @@ export const restoreCoinjoin = () => (dispatch: Dispatch, getState: GetState) =>
         (p, symbol) =>
             p.then(async () => {
                 // initialize @trezor/coinjoin backend
-                await CoinjoinBackendService.createInstance(symbol);
+                await CoinjoinBackendService.createInstance(symbol, coinjoinServerEnvironment);
                 // initialize @trezor/coinjoin client
-                await dispatch(initCoinjoinClient(symbol));
+                await dispatch(initCoinjoinClient(symbol, coinjoinServerEnvironment));
             }),
         Promise.resolve(),
     );

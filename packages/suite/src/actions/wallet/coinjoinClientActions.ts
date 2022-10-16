@@ -9,7 +9,7 @@ import * as COINJOIN from './constants/coinjoinConstants';
 import { addToast } from '../suite/notificationActions';
 import { CoinjoinClientService } from '@suite/services/coinjoin/coinjoinClient';
 import { Dispatch, GetState } from '@suite-types';
-import { Account } from '@suite-common/wallet-types';
+import { Account, CoinjoinServerEnvironment } from '@suite-common/wallet-types';
 
 const clientEnable = (symbol: Account['symbol']) =>
     ({
@@ -420,49 +420,51 @@ const onCoinjoinClientRequest =
         );
     };
 
-export const initCoinjoinClient = (symbol: Account['symbol']) => async (dispatch: Dispatch) => {
-    // find already running instance of @trezor/coinjoin client
-    const knownClient = CoinjoinClientService.getInstance(symbol);
-    if (knownClient) {
-        return knownClient;
-    }
-
-    // or start new instance
-    dispatch(clientEnable(symbol));
-
-    const client = await CoinjoinClientService.createInstance(symbol);
-    try {
-        const status = await client.enable();
-        if (!status) {
-            throw new Error('status is missing');
+export const initCoinjoinClient =
+    (symbol: Account['symbol'], environment?: CoinjoinServerEnvironment) =>
+    async (dispatch: Dispatch) => {
+        // find already running instance of @trezor/coinjoin client
+        const knownClient = CoinjoinClientService.getInstance(symbol);
+        if (knownClient) {
+            return knownClient;
         }
-        // handle status change
-        client.on('status', status => dispatch(clientOnStatusEvent(symbol, status)));
-        // handle active round change
-        client.on('event', event => {
-            dispatch(onCoinjoinClientEvent(symbol, event));
-        });
-        // handle requests (ownership proof, sign transaction)
-        client.on('request', async data => {
-            const response = await dispatch(onCoinjoinClientRequest(symbol, data));
-            client.resolveRequest(response);
-        });
-        // handle log
-        client.on('log', (...args: any[]) => {
-            dispatch(clientLog(args.join(' ')));
-        });
-        dispatch(clientEnableSuccess(symbol, status));
-        return client;
-    } catch (error) {
-        dispatch(clientEnableFailed(symbol));
-        dispatch(
-            addToast({
-                type: 'error',
-                error: `Coinjoin client not enabled: ${error.message}`,
-            }),
-        );
-    }
-};
+
+        // or start new instance
+        dispatch(clientEnable(symbol));
+
+        const client = await CoinjoinClientService.createInstance(symbol, environment);
+        try {
+            const status = await client.enable();
+            if (!status) {
+                throw new Error('status is missing');
+            }
+            // handle status change
+            client.on('status', status => dispatch(clientOnStatusEvent(symbol, status)));
+            // handle active round change
+            client.on('event', event => {
+                dispatch(onCoinjoinClientEvent(symbol, event));
+            });
+            // handle requests (ownership proof, sign transaction)
+            client.on('request', async data => {
+                const response = await dispatch(onCoinjoinClientRequest(symbol, data));
+                client.resolveRequest(response);
+            });
+            // handle log
+            client.on('log', (...args: any[]) => {
+                dispatch(clientLog(args.join(' ')));
+            });
+            dispatch(clientEnableSuccess(symbol, status));
+            return client;
+        } catch (error) {
+            dispatch(clientEnableFailed(symbol));
+            dispatch(
+                addToast({
+                    type: 'error',
+                    error: `Coinjoin client not enabled: ${error.message}`,
+                }),
+            );
+        }
+    };
 
 // return only active instances
 export const getCoinjoinClient = (symbol: Account['symbol']) => () =>
