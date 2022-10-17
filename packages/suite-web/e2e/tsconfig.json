@@ -1,10 +1,9 @@
 {
-    "extends": "../tsconfig.json",
+    // "extends": "../tsconfig.json",
     "compilerOptions": {
-        "target": "es5",
-        "lib": ["es5", "dom"],
         "types": ["cypress", "node"],
-        "esModuleInterop": true
-    },
-    "include": ["**/*.ts"]
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "ES3"
+    }
 }

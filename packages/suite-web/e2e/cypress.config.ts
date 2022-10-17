@@ -167,7 +167,11 @@ export default defineConfig({
                     });
                 },
                 readDir: dir => fs.readdirSync(dir, { encoding: 'utf-8' }),
-                rmDir: (opts: { recursive: fs.RmDirOptions['recursive']; dir: string }) => {
+                rmDir: (opts: {
+                    recursive: fs.RmDirOptions['recursive'];
+                    dir: string;
+                    force?: boolean;
+                }) => {
                     const { dir, recursive } = opts;
                     // just a security check so that we do accidentally wipe something we don't want
                     const restrictedPath = path.join(__dirname, '..', config.downloadsFolder);
