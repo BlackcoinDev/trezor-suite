@@ -1,16 +1,19 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Button, variables } from '@trezor/components';
-import { Translation } from './Translation';
+import { selectAccountByKey } from '@suite-common/wallet-core';
 import { CoinjoinSession, RoundPhase, WalletParams } from '@suite-common/wallet-types';
-import { CountdownTimer } from './CountdownTimer';
-import { useActions } from '@suite-hooks/useActions';
-import * as routerActions from '@suite-actions/routerActions';
-import * as suiteActions from '@suite-actions/suiteActions';
+import { COINJOIN_PHASE_MESSAGES } from '@suite-constants/coinjoin';
+import { selectDevice } from '@suite-actions/suiteActions';
+import { goto } from '@suite-actions/routerActions';
 import { useSelector } from '@suite-hooks/useSelector';
 import { STATUS as DiscoveryStatus } from '@wallet-actions/constants/discoveryConstants';
+import { CountdownTimer } from './CountdownTimer';
 import { WalletLabeling } from './Labeling';
-import { COINJOIN_PHASE_MESSAGES } from '@suite-constants/coinjoin';
+import { ProgressPie } from './ProgressPie';
+import { Translation } from './Translation';
+import { useDispatch } from 'react-redux';
+import { selectRouterParams } from '@suite-reducers/routerReducer';
 
 const SPACING = 6;
 
@@ -25,13 +28,8 @@ const Container = styled.div`
     font-weight: ${variables.FONT_WEIGHT.MEDIUM};
 `;
 
-const ProgressPie = styled.div<{ progress: number }>`
-    width: 16px;
-    height: 16px;
+const StyledProgressPie = styled(ProgressPie)`
     margin-right: ${SPACING}px;
-    border-radius: 50%;
-    background: ${({ theme, progress }) =>
-        `conic-gradient(${theme.BG_GREEN} ${3.6 * progress}deg, ${theme.STROKE_GREY} 0)`};
 `;
 
 const StatusText = styled.span`
@@ -59,17 +57,21 @@ interface CoinjoinStatusBarProps {
 
 export const CoinjoinStatusBar = ({ accountKey, session, isSingle }: CoinjoinStatusBarProps) => {
     const devices = useSelector(state => state.devices);
-    const accounts = useSelector(state => state.wallet.accounts);
+    const relatedAccount = useSelector(state => selectAccountByKey(state, accountKey));
     const selectedDevice = useSelector(state => state.suite.device);
-    const routerParams = useSelector(state => state.router.params);
+    const routerParams = useSelector(selectRouterParams);
     const discovery = useSelector(state => state.wallet.discovery);
 
-    const { goto, selectDevice } = useActions({
-        goto: routerActions.goto,
-        selectDevice: suiteActions.selectDevice,
-    });
+    //  ⬇️⬇️⬇️ REMOVE AFTER REVIEW ⬇️⬇️⬇️
 
-    const relatedAccount = accounts?.find(account => account?.key === accountKey);
+    // will be replaced by an condition in the onCoinjoinClientEvent() action, with the same functionality
+    // https://github.com/trezor/trezor-suite/blob/1be74a2f30b65f4c0aa1567e7e6208f78410256b/packages/suite/src/actions/wallet/coinjoinClientActions.ts#L135
+
+    // useCoinjoinTracker(accountKey, session, relatedDevice);
+
+    //  🔼🔼🔼 REMOVE AFTER REVIEW 🔼🔼🔼
+
+    const dispatch = useDispatch();
 
     if (!relatedAccount) {
         return null;
@@ -77,8 +79,8 @@ export const CoinjoinStatusBar = ({ accountKey, session, isSingle }: CoinjoinSta
 
     const { symbol, index, accountType, deviceState } = relatedAccount;
 
+    const relatedDevice = devices.find(device => device.state === relatedAccount?.deviceState);
     const isOnSelectedDevice = selectedDevice?.state === deviceState;
-    const relatedDevice = devices.find(device => device.state === deviceState);
 
     if (!relatedDevice) {
         return null;
@@ -86,16 +88,18 @@ export const CoinjoinStatusBar = ({ accountKey, session, isSingle }: CoinjoinSta
 
     const handleViewAccount = () => {
         if (!isOnSelectedDevice) {
-            selectDevice(relatedDevice);
+            dispatch(selectDevice(relatedDevice));
         }
 
-        goto('wallet-index', {
-            params: {
-                symbol,
-                accountIndex: index,
-                accountType,
-            },
-        });
+        dispatch(
+            goto('wallet-index', {
+                params: {
+                    symbol,
+                    accountIndex: index,
+                    accountType,
+                },
+            }),
+        );
     };
 
     const { phase, signedRounds, maxRounds, deadline } = session;
@@ -120,7 +124,7 @@ export const CoinjoinStatusBar = ({ accountKey, session, isSingle }: CoinjoinSta
 
     return (
         <Container>
-            <ProgressPie progress={progress} />
+            <StyledProgressPie progress={progress} />
 
             <StatusText>
                 <Translation id={COINJOIN_PHASE_MESSAGES[phase || RoundPhase.InputRegistration]} />
