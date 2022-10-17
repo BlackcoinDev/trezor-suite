@@ -42,7 +42,7 @@ interface AnonymityLevelSliderProps {
 
 const trackStyle = {
     background:
-        'linear-gradient(270deg, #2A9649 0%, #95CDA5 69.27%, #C8B883 81.77%, #C8B882 88.02%, #BF6767 100%);',
+        'linear-gradient(270deg, #2A9649 0%, #95CDA5 45%, #C8B883 55%, #C8B882 60%, #BF6767 100%);',
 };
 
 const minPosition = 0;
