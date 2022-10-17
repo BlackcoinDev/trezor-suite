@@ -134,6 +134,7 @@ export interface AccountAddresses {
     change: Address[];
     used: Address[];
     unused: Address[];
+    anonymitySet?: Record<string, number | undefined>; // key -> address, value -> anonymity. used in coinjoin accounts
 }
 
 export interface Utxo {
