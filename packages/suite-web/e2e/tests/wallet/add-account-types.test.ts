@@ -4,7 +4,7 @@
 import { onAccountsPage } from '../../support/pageObjects/accountsObject';
 import { onSettingsCryptoPage } from '../../support/pageObjects/settingsCryptoObject';
 import { onTopBar } from '../../support/pageObjects/topBarObject';
-import { NetworkSymbol } from '../../../../../suite-common/wallet-config/src/networksConfig';
+import { NetworkSymbol } from '@suite-common/wallet-config';
 
 describe('Account types suite', () => {
     beforeEach(() => {

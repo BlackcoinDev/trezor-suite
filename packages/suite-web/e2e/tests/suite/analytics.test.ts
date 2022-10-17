@@ -1,7 +1,7 @@
 // @group:suite
 // @retry=2
 
-import { urlSearchParams } from '../../../../suite/src/utils/suite/metadata';
+import { urlSearchParams } from '@trezor/suite/src/utils/suite/metadata';
 import { EventType } from '@trezor/suite-analytics';
 
 type Requests = ReturnType<typeof urlSearchParams>[];

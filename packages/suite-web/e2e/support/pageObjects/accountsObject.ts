@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { NetworkSymbol } from '../../../../../suite-common/wallet-config/src/networksConfig';
+import { NetworkSymbol } from '@suite-common/wallet-config';
 
 class AccountsPage {
     unpackAllAccountTypes() {
