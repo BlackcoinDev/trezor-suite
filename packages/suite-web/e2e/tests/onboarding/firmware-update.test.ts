@@ -23,8 +23,8 @@ let firmwareHash = '';
 // - Have devtools opened -> network
 // - Go to suite, do the same things you intend to do in your test
 // - After your are done, right click "Save all as HAR with content"
-// - Save it into path trezor-suite/packages/integration-tests/projects/suite-web/fixtures/<name>.har
-// - run `yarn tsx trezor-suite/packages/integration-tests process-har.ts <name>.hare`
+// - Save it into path packages/suite-web/e2e/fixtures/<name>.har
+// - run `yarn tsx packages/suite-web/e2e process-har.ts <name>.hare`
 // - where you would normally do `cy.task('startBridge') run  `cy.task('startMockedBridge, har)` instead  where har is the output of process-har.ts script
 // - profit
 

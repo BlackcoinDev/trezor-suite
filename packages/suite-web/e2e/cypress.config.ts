@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { defineConfig } from 'cypress';
 
 import CDP from 'chrome-remote-interface';
@@ -153,7 +151,8 @@ export default defineConfig({
                     await client.CSS.enable();
                     // as the Window consists of two IFrames, we must retrieve the right one
                     const allRootNodes = await client.DOM.getFlattenedDocument();
-                    const isIframe = node => node.nodeName === 'IFRAME' && node.contentDocument;
+                    const isIframe = (node: any) =>
+                        node.nodeName === 'IFRAME' && node.contentDocument;
                     const filtered = allRootNodes.nodes.filter(isIframe);
                     // The first IFrame is our App
                     const root = filtered[0].contentDocument;
@@ -168,8 +167,8 @@ export default defineConfig({
                     });
                 },
                 readDir: dir => fs.readdirSync(dir, { encoding: 'utf-8' }),
-                rmDir: opts => {
-                    const { dir, force, recursive } = opts;
+                rmDir: (opts: { recursive: fs.RmDirOptions['recursive']; dir: string }) => {
+                    const { dir, recursive } = opts;
                     // just a security check so that we do accidentally wipe something we don't want
                     const restrictedPath = path.join(__dirname, '..', config.downloadsFolder);
                     if (!dir.startsWith(restrictedPath)) {
@@ -177,7 +176,7 @@ export default defineConfig({
                         throw new Error(`'it is not allowed to rm outside ${restrictedPath}`);
                     }
                     if (fs.existsSync(dir)) {
-                        fs.rmdirSync(dir, { force, recursive });
+                        fs.rmdirSync(dir, { recursive });
                     }
                     return null;
                 },
@@ -186,7 +185,7 @@ export default defineConfig({
                     const result = [];
                     const headers = lines[0].split(',');
                     for (let i = 1; i < lines.length; i++) {
-                        const obj = {};
+                        const obj: Record<string, string> = {};
                         const currentline = lines[i].split(',');
 
                         for (let j = 0; j < headers.length; j++) {

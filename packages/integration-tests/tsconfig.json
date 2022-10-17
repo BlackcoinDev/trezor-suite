@@ -9,11 +9,7 @@
         ],
         "noEmit": true
     },
-    "include": [
-        "**/*.ts",
-        "**/*.js",
-        "../suite-web/e2e/process-har.ts"
-    ],
+    "include": ["**/*.ts", "**/*.js"],
     "references": [
         { "path": "../trezor-user-env-link" }
     ]

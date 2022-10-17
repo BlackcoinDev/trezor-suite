@@ -1,14 +1,19 @@
-// @ts-nocheck
-
 /* eslint-disable max-classes-per-file */
-import express from 'express';
+
+import express, { Express } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
 const BOUNDARY = '---------314159265358979323846';
 const port = 30001;
 
 class File {
-    constructor(id, name, data) {
+    id: string;
+    name: string;
+    mimeType: string;
+    kind: string;
+    data: Buffer;
+
+    constructor(id: string, name: string, data: Buffer) {
         this.id = id;
         this.name = name;
         this.mimeType = 'text/plain';
@@ -30,6 +35,15 @@ class File {
  * Mock implementation of Google Drive service intended to be used in e2e tests.
  */
 class GoogleMock {
+    files: Record<string, any> = {};
+    nextResponse: null | Record<string, any> = null;
+    // store requests for assertions in tests
+    requests: string[] = [];
+    app?: Express;
+    running?: boolean;
+    server?: any;
+    user?: any;
+
     constructor() {
         this.reset();
 
@@ -40,6 +54,7 @@ class GoogleMock {
 
             if (this.nextResponse) {
                 console.log('[mockGoogleDrive]', this.nextResponse);
+                //    @ts-expect-error
                 res.writeHeader(this.nextResponse.status, this.nextResponse.headers);
                 res.write(JSON.stringify(this.nextResponse.body));
                 res.end();
@@ -58,7 +73,7 @@ class GoogleMock {
             return next();
         });
 
-        const handleSave = (rawBody, id) => {
+        const handleSave = (rawBody: any, id: string) => {
             const textContentType = 'Content-Type: text/plain;charset=UTF-8';
             const data = rawBody
                 .substring(
@@ -88,18 +103,18 @@ class GoogleMock {
 
         app.post('/upload/drive/v3/files', express.text({ type: '*/*' }), (req, res) => {
             console.log('[mockGoogleDrive]: post');
-
+            // @ts-expect-error
             handleSave(req.body);
             res.send({});
         });
 
-        app.post('/revoke', (req, res) => {
+        app.post('/revoke', (_req, res) => {
             console.log('[mockGoogleDrive]: revoke');
             res.send();
         });
 
         // oauth2 authorization code flow presumes exchanging 'code' for token through post request to /token endpoint
-        app.post('/token', (req, res) => {
+        app.post('/token', (_req, res) => {
             console.log('[mockGoogleDrive]: token');
             res.send({
                 access_token: 'foo-token',
@@ -133,13 +148,13 @@ class GoogleMock {
             });
         });
 
-        app.get('/drive/v3/files', express.json(), (req, res) => {
+        app.get('/drive/v3/files', express.json(), (_req, res) => {
             res.json({
                 files: Object.values(this.files),
             });
         });
 
-        app.get('/drive/v3/about', express.json(), (req, res) => {
+        app.get('/drive/v3/about', express.json(), (_req, res) => {
             console.log('[mockGoogleDrive]: about');
             res.send({
                 user: this.user,
@@ -157,12 +172,13 @@ class GoogleMock {
 
         console.log('[mockGoogleDrive]: start');
 
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
+            // @ts-expect-error
             this.app.listen(port, server => {
                 console.log(`[mockGoogleDrive] listening at http://localhost:${port}`);
                 this.running = true;
                 this.server = server;
-                resolve();
+                resolve(undefined);
             });
         });
     }
@@ -185,14 +201,16 @@ class GoogleMock {
         this.requests = [];
     }
 
-    setup(prop, value) {
+    setup(prop: any, value: any) {
         console.log('[mockGoogleDrive]: setup ', prop, value);
 
+        // @ts-expect-error
         this[prop] = value;
+        // @ts-expect-error
         console.log('[mockGoogleDrive] ', this[prop]);
     }
 
-    setFile(name, content) {
+    setFile(name: string, content: any) {
         if (this.files[name]) {
             this.files[name] = new File(
                 this.files[name].id,

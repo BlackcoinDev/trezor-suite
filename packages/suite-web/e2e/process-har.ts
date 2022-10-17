@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const fixturesPath = './projects/suite-web/fixtures';
+const fixturesPath = './fixtures';
 const filePath = path.join(__dirname, fixturesPath);
 const fileName = process.argv[process.argv.length - 1];
 

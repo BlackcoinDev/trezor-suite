@@ -1,7 +1,6 @@
-// @ts-nocheck
-
 /* eslint-disable camelcase */
-import express from 'express';
+
+import express, { Express } from 'express';
 
 const port = 30002;
 
@@ -9,12 +8,15 @@ const port = 30002;
  * Mock implementation of Dropbox service intended to be used in e2e tests.
  */
 class DropboxMock {
-    constructor() {
-        this.files = {};
-        this.nextResponse = null;
-        // store requests for assertions in tests
-        this.requests = [];
+    files: Record<string, any> = {};
+    nextResponse: null | Record<string, any> = null;
+    // store requests for assertions in tests
+    requests: string[] = [];
+    app?: Express;
+    running?: boolean;
+    server?: any;
 
+    constructor() {
         const app = express();
 
         app.use(express.json());
@@ -24,6 +26,7 @@ class DropboxMock {
 
             if (this.nextResponse) {
                 console.log('[dropboxMock]', this.nextResponse);
+                // @ts-expect-error
                 res.writeHeader(this.nextResponse.status, this.nextResponse.headers);
                 res.write(JSON.stringify(this.nextResponse.body));
                 res.end();
@@ -87,6 +90,7 @@ class DropboxMock {
             // this is because dropbox lib relies on not having default content-type
             // set by express application/json; charset=utf-8
             // it accepts only application/json;
+            // @ts-expect-error
             res.writeHeader(200, { 'Content-Type': 'application/json' });
             res.write(JSON.stringify(user));
             res.end();
@@ -98,6 +102,7 @@ class DropboxMock {
 
             const file = this.files[`/apps/trezor/${query}`];
 
+            // @ts-expect-error
             res.writeHeader(200, { 'Content-Type': 'application/json' });
 
             if (file) {
@@ -136,6 +141,7 @@ class DropboxMock {
 
         // https://content.dropboxapi.com/2/files/download
         app.post('/2/files/download', (req, res) => {
+            // @ts-expect-error
             const dropboxApiArgs = JSON.parse(req.headers['dropbox-api-arg']);
             const { path } = dropboxApiArgs;
             const name = path.replace('/apps/trezor/', '');
@@ -143,6 +149,7 @@ class DropboxMock {
             const file = this.files[path];
 
             if (file) {
+                // @ts-expect-error
                 res.writeHeader(200, {
                     'Content-Type': 'application/octet-stream',
                     'Dropbox-Api-Result': `{"name": "${name}", "path_lower": "${path}", "path_display": "/Apps/TREZOR/${name}", "id": "id:foo-bar", "client_modified": "2020-10-07T09:52:45Z", "server_modified": "2020-10-07T09:52:45Z", "rev": "foo-bar", "size": 666, "is_downloadable": true, "content_hash": "foo-bar"}`,
@@ -160,6 +167,7 @@ class DropboxMock {
             '/2/files/upload',
             express.raw({ type: 'application/octet-stream' }),
             (req, res) => {
+                // @ts-expect-error
                 const dropboxApiArgs = JSON.parse(req.headers['dropbox-api-arg']);
                 const { path } = dropboxApiArgs;
                 this.files[path.toLowerCase()] = req.body;
@@ -180,11 +188,12 @@ class DropboxMock {
         console.log('[mockDropbox]: start');
 
         return new Promise(resolve => {
-            this.app.listen(port, server => {
+            // @ts-expect-error
+            this.app!.listen(port, server => {
                 console.log(`[mockDropbox] listening at http://localhost:${port}`);
                 this.running = true;
                 this.server = server;
-                resolve();
+                resolve(undefined);
             });
         });
     }
