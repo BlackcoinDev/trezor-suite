@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 import styled from 'styled-components';
-import { Card, P } from '@trezor/components';
+import { Card, P, variables } from '@trezor/components';
 import { Translation } from '@suite-components';
 
 import { AnonymityLevelSlider } from './AnonymityLevelSlider';
@@ -15,6 +15,7 @@ const SetupCard = styled(Card)`
     top: 12px;
     right: 0;
     width: 560px;
+    z-index: ${variables.Z_INDEX.BASE};
     box-shadow: 0px 4px 4px ${({ theme }) => theme.BOX_SHADOW_BLACK_15};
     border-radius: 16px;
     animation: ${DROPDOWN_MENU} 0.15s ease-in-out;
@@ -24,8 +25,8 @@ const SliderWrapper = styled.div`
     padding-bottom: 10px;
 `;
 
-export const AnonymityLevelSetupCard = forwardRef<HTMLDivElement, {}>(({}, ref) => {
-    return (
+export const AnonymityLevelSetupCard = forwardRef<HTMLDivElement, Record<string, never>>(
+    (_, ref) => (
         <Container ref={ref}>
             <SetupCard>
                 <P weight="medium">
@@ -39,5 +40,5 @@ export const AnonymityLevelSetupCard = forwardRef<HTMLDivElement, {}>(({}, ref) 
                 </SliderWrapper>
             </SetupCard>
         </Container>
-    );
-});
+    ),
+);
