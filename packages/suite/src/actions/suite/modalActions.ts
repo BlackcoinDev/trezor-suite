@@ -152,6 +152,10 @@ export type UserContextPayload =
     | {
           type: 'reconnect-coinjoin-device';
           relatedDeviceState: string;
+      }
+    | {
+          type: 'coinjoin-success';
+          relatedAccountKey: string;
       };
 
 export type ModalAction =

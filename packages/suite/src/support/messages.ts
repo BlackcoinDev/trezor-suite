@@ -7474,4 +7474,20 @@ export default defineMessages({
         defaultMessage:
             'Otherwise, you will spoil CoinJoin for other participants. Therefore, <b>you will be temporarily blocked</b> from accessing the CoinJoin functionality',
     },
+    TR_DISMISS: {
+        id: 'TR_DISMISS',
+        defaultMessage: 'Dismiss',
+    },
+    TR_VIEW_ACCOUNT: {
+        id: 'TR_VIEW_ACCOUNT',
+        defaultMessage: 'View account',
+    },
+    TR_COINJOIN_COMPLETED: {
+        id: 'TR_COINJOIN_COMPLETED',
+        defaultMessage: 'Coinjoin successfully completed!',
+    },
+    TR_ANONYMIZED_AMOUNT: {
+        id: 'TR_ANONYMIZED_AMOUNT',
+        defaultMessage: 'You have anonymized {amount}',
+    },
 });

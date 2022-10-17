@@ -38,3 +38,5 @@ export { TorLoading } from './TorLoading';
 export { CancelCoinjoin } from './CancelCoinjoin';
 export { CriticalCoinjoinPhase } from './CriticalCoinjoinPhase';
 export { AccessCoinjoinAccount } from './AccessCoinjoinAccount';
+export { ReconnectCoinjoinDevice } from './ReconnectCoinjoinDevice';
+export { CoinjoinSuccess } from './CoinjoinSuccess';

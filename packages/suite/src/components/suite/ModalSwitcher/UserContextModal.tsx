@@ -33,6 +33,7 @@ import {
     CancelCoinjoin,
     CriticalCoinjoinPhase,
     ReconnectCoinjoinDevice,
+    CoinjoinSuccess,
     AccessCoinjoinAccount,
 } from '@suite-components/modals';
 
@@ -168,6 +169,8 @@ export const UserContextModal = ({
             return <CriticalCoinjoinPhase relatedAccountKey={payload.relatedAccountKey} />;
         case 'reconnect-coinjoin-device':
             return <ReconnectCoinjoinDevice relatedDeviceState={payload.relatedDeviceState} />;
+        case 'coinjoin-success':
+            return <CoinjoinSuccess relatedAccountKey={payload.relatedAccountKey} />;
 
         default:
             return null;
