@@ -57,9 +57,9 @@ const anonymityStatus = {
     },
     great: {
         label: <Translation id="TR_ANONYMITY_LEVEL_GREAT" />,
-        color: defaultColorVariant.forest,
+        color: defaultColorVariant.green,
     },
-};
+} as const;
 
 const getAnonymityStatus = (targetAnonymity: number) => {
     if (targetAnonymity < 5) {
