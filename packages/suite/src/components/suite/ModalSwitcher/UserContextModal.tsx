@@ -32,6 +32,7 @@ import {
     TorLoading,
     CancelCoinjoin,
     CriticalCoinjoinPhase,
+    ReconnectCoinjoinDevice,
     AccessCoinjoinAccount,
 } from '@suite-components/modals';
 
@@ -165,6 +166,8 @@ export const UserContextModal = ({
             return <CancelCoinjoin onClose={onCancel} />;
         case 'critical-coinjoin-phase':
             return <CriticalCoinjoinPhase relatedAccountKey={payload.relatedAccountKey} />;
+        case 'reconnect-coinjoin-device':
+            return <ReconnectCoinjoinDevice relatedDeviceState={payload.relatedDeviceState} />;
 
         default:
             return null;

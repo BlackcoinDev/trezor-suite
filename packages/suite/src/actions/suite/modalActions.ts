@@ -148,6 +148,10 @@ export type UserContextPayload =
     | {
           type: 'critical-coinjoin-phase';
           relatedAccountKey: string;
+      }
+    | {
+          type: 'reconnect-coinjoin-device';
+          relatedDeviceState: string;
       };
 
 export type ModalAction =

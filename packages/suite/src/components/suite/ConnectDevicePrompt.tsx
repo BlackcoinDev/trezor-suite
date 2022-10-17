@@ -77,6 +77,7 @@ interface ConnectDevicePromptProps {
     showWarning: boolean;
     allowSwitchDevice?: boolean;
     prerequisite?: PrerequisiteType;
+    className?: string;
 }
 
 export const ConnectDevicePrompt = ({
@@ -84,6 +85,7 @@ export const ConnectDevicePrompt = ({
     connected,
     showWarning,
     allowSwitchDevice,
+    className,
 }: ConnectDevicePromptProps) => {
     const { goto } = useActions({
         goto: routerActions.goto,
@@ -98,6 +100,7 @@ export const ConnectDevicePrompt = ({
             animate={{ opacity: 1, y: -0 }}
             transition={{ delay: 0.2, duration: 0.6, ease: motionEasing.enter }}
             data-test="@connect-device-prompt"
+            className={className}
         >
             <ImageWrapper>
                 <DeviceAnimation

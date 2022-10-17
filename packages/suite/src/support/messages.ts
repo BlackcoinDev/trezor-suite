@@ -7465,4 +7465,13 @@ export default defineMessages({
         id: 'TR_DO_NOT_DISCONNECT_DEVICE',
         defaultMessage: "Don't disconnect your device",
     },
+    TR_CONNECT_UNLOCK_DEVICE: {
+        id: 'TR_CONNECT_UNLOCK_DEVICE',
+        defaultMessage: 'Please Connect & Unlock your device',
+    },
+    TR_COINJOIN_CONNECT_DEVICE_WARNING: {
+        id: 'TR_COINJOIN_CONNECT_DEVICE_WARNING',
+        defaultMessage:
+            'Otherwise, you will spoil CoinJoin for other participants. Therefore, <b>you will be temporarily blocked</b> from accessing the CoinJoin functionality',
+    },
 });
