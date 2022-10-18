@@ -48,19 +48,12 @@ export const createTooltip = (text: string) => {
     return tooltip;
 };
 
-export const clearView = () => {
+export const clearLegacyView = () => {
     // clear and hide legacy views
     const container = document.getElementById('container');
     if (container) {
         container.innerHTML = '';
         container.style.display = 'none';
-    }
-
-    // clear and hide react views
-    const reactContainer = document.getElementById('react');
-    if (reactContainer) {
-        reactContainer.shadowRoot?.getElementById('reactRenderIn')?.remove();
-        reactContainer.style.display = 'none';
     }
 };
 
@@ -68,7 +61,7 @@ let reactRenderIn;
 
 // todo: ConnectUIProps
 export const renderConnectUI = (props: ConnectUIProps) => {
-    clearView();
+    clearLegacyView();
 
     const reactSlot = document.getElementById('react');
 
@@ -118,7 +111,7 @@ const renderLegacyView = (className: string) => {
 };
 
 export const showView = (component: string) => {
-    clearView();
+    document.dispatchEvent(new CustomEvent('react', { detail: {} }));
     return renderLegacyView(component);
 };
 

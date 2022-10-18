@@ -31,7 +31,9 @@ const Divider = styled.div`
     background: ${props => props.theme.STROKE_GREY};
 `;
 
-export type PassphraseProps = Extract<UiEvent, { type: 'ui-request_passphrase' }> & {
+export type PassphraseEventProps = Extract<UiEvent, { type: 'ui-request_passphrase' }>;
+
+export type PassphraseProps = PassphraseEventProps & {
     onPassphraseSubmit: (value: string, enterOnDevice?: boolean) => void;
 };
 

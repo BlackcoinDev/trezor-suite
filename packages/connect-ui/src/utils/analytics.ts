@@ -1,5 +1,45 @@
 import { analytics, EventType, getRandomId } from '@trezor/connect-analytics';
 import { storage } from '@trezor/connect-common';
+import {
+    getScreenWidth,
+    getScreenHeight,
+    getBrowserName,
+    getBrowserVersion,
+    getOsVersion,
+    getWindowWidth,
+    getWindowHeight,
+    getPlatformLanguages,
+    getOsName,
+} from '@trezor/env-utils';
+
+export const reportConnectInit = ({
+    referrer,
+    functionCall,
+    network,
+}: {
+    referrer: string;
+    functionCall: string;
+    network: string;
+    totalDevices: number;
+}) =>
+    analytics.report({
+        type: EventType.AppReady,
+        payload: {
+            browserName: getBrowserName(),
+            browserVersion: getBrowserVersion(),
+            osName: getOsName(),
+            osVersion: getOsVersion(),
+            connectVersion: process.env.VERSION || '',
+            referrer,
+            functionCall,
+            network,
+            screenWidth: getScreenWidth(),
+            screenHeight: getScreenHeight(),
+            windowWidth: getWindowWidth(),
+            windowHeight: getWindowHeight(),
+            platformLanguages: getPlatformLanguages().join(','),
+        },
+    });
 
 const saveTrackingEnablement = (enablement: boolean) => {
     storage.save((state, setState) => {
@@ -21,12 +61,12 @@ const saveTrackingId = (trackingId: string) => {
 
 const onEnable = () => {
     saveTrackingEnablement(true);
-    analytics.report({ type: EventType.SettingsTracking, value: true });
+    analytics.report({ type: EventType.SettingsTracking, payload: { value: true } });
 };
 
 const onDisable = () => {
     saveTrackingEnablement(false);
-    analytics.report({ type: EventType.SettingsTracking, value: false }, true);
+    analytics.report({ type: EventType.SettingsTracking, payload: { value: false } }, true);
 };
 
 export const initAnalytics = () => {
@@ -48,4 +88,5 @@ export const initAnalytics = () => {
             onDisable,
         },
     });
+    // reportConnectInit();
 };

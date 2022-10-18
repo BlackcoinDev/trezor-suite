@@ -8,8 +8,6 @@ import {
     PopupEvent,
     PopupInit,
     PopupHandshake,
-    UI,
-    createUiResponse,
 } from '@trezor/connect';
 
 import * as view from './view';
@@ -19,7 +17,6 @@ import {
     setOperation,
     initMessageChannel,
     postMessageToParent,
-    postMessage,
     renderConnectUI,
 } from './view/common';
 import {
@@ -50,15 +47,20 @@ const handleMessage = (event: MessageEvent<PopupEvent | UiEvent>) => {
     // This is message from the window.opener
     if (data.type === POPUP.INIT) {
         init(escapeHtml(data.payload)); // eslint-disable-line @typescript-eslint/no-use-before-define
+        document.dispatchEvent(new CustomEvent('react', { detail: data }));
         return;
     }
 
-    // This is message from the window.opener
     if (data.type === UI_REQUEST.IFRAME_FAILURE) {
-        renderConnectUI({
-            type: 'error',
-            detail: 'iframe-failure',
-        });
+        document.dispatchEvent(
+            new CustomEvent('react', {
+                detail: {
+                    type: 'error',
+                    detail: 'iframe-failure',
+                },
+            }),
+        );
+
         return;
     }
 
@@ -89,7 +91,7 @@ const handleMessage = (event: MessageEvent<PopupEvent | UiEvent>) => {
             }
             break;
         case UI_REQUEST.TRANSPORT:
-            renderConnectUI(message);
+            document.dispatchEvent(new CustomEvent('react', { detail: message }));
             break;
         case UI_REQUEST.SELECT_DEVICE:
             view.selectDevice(message.payload);
@@ -156,19 +158,7 @@ const handleMessage = (event: MessageEvent<PopupEvent | UiEvent>) => {
             break;
         // comes first
         case UI_REQUEST.REQUEST_PASSPHRASE:
-            renderConnectUI({
-                ...message,
-                onPassphraseSubmit: (value: string, passphraseOnDevice?: boolean) => {
-                    postMessage(
-                        createUiResponse(UI.RECEIVE_PASSPHRASE, {
-                            value,
-                            passphraseOnDevice,
-                            // todo: what is this param?
-                            save: true,
-                        }),
-                    );
-                },
-            });
+            document.dispatchEvent(new CustomEvent('react', { detail: message }));
             break;
         // comes when user clicks "enter on device"
         case UI_REQUEST.REQUEST_PASSPHRASE_ON_DEVICE:
@@ -216,13 +206,19 @@ const onLoad = () => {
         return;
     }
 
+    renderConnectUI();
+
     postMessageToParent(createPopupMessage(POPUP.LOADED));
 
     handshakeTimeout = setTimeout(() => {
-        renderConnectUI({
-            type: 'error',
-            detail: 'handshake-timeout',
-        });
+        document.dispatchEvent(
+            new CustomEvent('react', {
+                detail: {
+                    type: 'error',
+                    detail: 'handshake-timeout',
+                },
+            }),
+        );
 
         // todo: increase timeout, now set low for testing
     }, 30 * 1000);
