@@ -41,11 +41,12 @@ interface TransactionListProps {
     account: Account;
 }
 
-const TransactionList = ({ transactions, isLoading, account, ...props }: TransactionListProps) => {
-    const ref = React.createRef<HTMLDivElement>();
-    const { fetchTransactions } = useActions({
-        fetchTransactions: fetchTransactionsThunk,
-    });
+export const TransactionList = ({
+    transactions,
+    isLoading,
+    account,
+    symbol,
+}: TransactionListProps) => {
     const { anchor, localCurrency } = useSelector(state => ({
         localCurrency: state.wallet.settings.localCurrency,
         anchor: state.router.anchor,
@@ -54,7 +55,13 @@ const TransactionList = ({ transactions, isLoading, account, ...props }: Transac
     // Search
     const [search, setSearch] = useState('');
     const [searchedTransactions, setSearchedTransactions] = useState(transactions);
-    const isSearching = search !== '';
+    const [hasFetchedAll, setHasFetchedAll] = useState(false);
+
+    const { fetchTransactions } = useActions({
+        fetchTransactions: fetchTransactionsThunk,
+    });
+
+    const sectionRef = React.createRef<HTMLDivElement>();
 
     useDebounce(
         () => {
@@ -65,7 +72,6 @@ const TransactionList = ({ transactions, isLoading, account, ...props }: Transac
         [transactions, account.metadata, search],
     );
 
-    const [hasFetchedAll, setHasFetchedAll] = useState(false);
     useEffect(() => {
         if (anchor && !hasFetchedAll) {
             fetchTransactions({
@@ -89,6 +95,7 @@ const TransactionList = ({ transactions, isLoading, account, ...props }: Transac
         setSelectedPage(startPage);
     }, [account.descriptor, account.symbol, startPage]);
 
+    const isSearching = search !== '';
     const totalItems = isSearching ? searchedTransactions.length : account.history.total;
 
     const onPageSelected = (page: number) => {
@@ -98,8 +105,8 @@ const TransactionList = ({ transactions, isLoading, account, ...props }: Transac
             fetchTransactions({ accountKey: account.key, page, perPage });
         }
 
-        if (ref.current) {
-            ref.current.scrollIntoView();
+        if (sectionRef.current) {
+            sectionRef.current.scrollIntoView();
         }
     };
 
@@ -116,16 +123,47 @@ const TransactionList = ({ transactions, isLoading, account, ...props }: Transac
         [slicedTransactions],
     );
 
+    const listItems = useMemo(
+        () =>
+            Object.entries(transactionsByDate).map(([dateKey, value]) => {
+                const isPending = dateKey === 'pending';
+
+                const transactionItems = value.map((tx: WalletAccountTransaction) => (
+                    <TransactionItem
+                        key={tx.txid}
+                        transaction={tx}
+                        isPending={isPending}
+                        accountMetadata={account.metadata}
+                        accountKey={account.key}
+                    />
+                ));
+
+                return (
+                    <TransactionsGroup
+                        key={dateKey}
+                        dateKey={dateKey}
+                        symbol={symbol}
+                        transactions={value}
+                        localCurrency={localCurrency}
+                    >
+                        <StyledCard isPending={isPending}>{transactionItems}</StyledCard>
+                    </TransactionsGroup>
+                );
+            }),
+        [transactionsByDate, account.key, account.metadata, localCurrency, symbol],
+    );
+
     // if total pages cannot be determined check current page and number of txs (XRP)
     // Edge case: if there is exactly 25 Ripple txs, pagination will be displayed
     const isRipple = account.networkType === 'ripple';
     const isLastRipplePage = isRipple && slicedTransactions.length < perPage;
     const showRipplePagination = !(isLastRipplePage && currentPage === 1);
     const showPagination = isRipple ? showRipplePagination : totalItems > perPage;
+    const areTransactionsAvailable = transactions.length > 0 && searchedTransactions.length === 0;
 
     return (
         <StyledSection
-            ref={ref}
+            ref={sectionRef}
             heading={<Translation id="TR_ALL_TRANSACTIONS" />}
             actions={
                 <Actions
@@ -144,39 +182,9 @@ const TransactionList = ({ transactions, isLoading, account, ...props }: Transac
                     <SkeletonTransactionItem />
                 </Stack>
             ) : (
-                <>
-                    {transactions.length > 0 && searchedTransactions.length === 0 ? (
-                        <NoSearchResults />
-                    ) : (
-                        Object.keys(transactionsByDate).map(dateKey => {
-                            const isPending = dateKey === 'pending';
-                            return (
-                                <TransactionsGroup
-                                    key={dateKey}
-                                    dateKey={dateKey}
-                                    symbol={props.symbol}
-                                    transactions={transactionsByDate[dateKey]}
-                                    localCurrency={localCurrency}
-                                >
-                                    <StyledCard isPending={isPending}>
-                                        {transactionsByDate[dateKey].map(
-                                            (tx: WalletAccountTransaction) => (
-                                                <TransactionItem
-                                                    key={tx.txid}
-                                                    transaction={tx}
-                                                    isPending={isPending}
-                                                    accountMetadata={account.metadata}
-                                                    accountKey={account.key}
-                                                />
-                                            ),
-                                        )}
-                                    </StyledCard>
-                                </TransactionsGroup>
-                            );
-                        })
-                    )}
-                </>
+                <>{areTransactionsAvailable ? <NoSearchResults /> : listItems}</>
             )}
+
             {showPagination && (
                 <PaginationWrapper>
                     <Pagination
@@ -192,5 +200,3 @@ const TransactionList = ({ transactions, isLoading, account, ...props }: Transac
         </StyledSection>
     );
 };
-
-export default TransactionList;

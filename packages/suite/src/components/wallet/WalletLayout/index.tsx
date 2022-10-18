@@ -43,26 +43,33 @@ type ProgressInfo = {
 };
 
 const AccountLoadingProgress = ({ account: { account } }: Pick<WalletLayoutProps, 'account'>) => {
+    const [progress, setProgress] = useState<ProgressInfo>();
+
     const network = account?.symbol;
     const backendType = account?.backendType;
-    const [progress, setProgress] = useState<ProgressInfo>();
 
     useEffect(() => {
         if (!network || backendType !== 'coinjoin') return;
+
         const backend = CoinjoinBackendService.getInstance(network);
         if (!backend) return;
+
         const onProgress = ({ info }: { info?: ProgressInfo }) => setProgress(info);
+
         backend.on('progress', onProgress);
+
         return () => {
             backend.off('progress', onProgress);
         };
     }, [network, backendType]);
 
+    const value = progress?.progress ?? 0;
+
     return progress ? (
         <>
-            <Progress max={1} value={progress.progress ?? 0} />
+            <Progress max={1} value={value} />
             <p>
-                {Math.floor(100 * (progress.progress ?? 0))} % {progress.message}
+                {Math.floor(100 * value)} % {progress.message}
             </p>
         </>
     ) : null;
@@ -104,15 +111,10 @@ export const WalletLayout = ({
         );
     }
 
-    // if (account.imported) {
-    // TODO
-    // }
-
     return (
         <Wrapper>
             <AccountMode mode={account.mode} />
             <AccountAnnouncement selectedAccount={account} />
-            {/* <WalletNotifications /> */}
             {showEmptyHeaderPlaceholder && <EmptyHeaderPlaceholder />}
             {children}
         </Wrapper>
