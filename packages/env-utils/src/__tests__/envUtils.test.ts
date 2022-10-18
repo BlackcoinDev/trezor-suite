@@ -1,6 +1,5 @@
-import { isAndroid, isChromeOs } from '@trezor/env-utils';
-import { isWindows, isMacOs, isLinux, getOsName, isIOs } from '@suite-utils/env';
-import * as fixtures from '../__fixtures__/env';
+import { isAndroid, isChromeOs, isWindows, isMacOs, isLinux, getOsName, isIOs } from '../envUtils';
+import * as fixtures from '../__fixtures__/envUtils';
 
 // TODO: this tests should be reworked due to mocking problem because of compilation.
 // Problem is when mocking function inside of module for example jest.spyOn(env, 'getProcessPlatform')
