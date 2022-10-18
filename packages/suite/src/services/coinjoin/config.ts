@@ -1,6 +1,8 @@
+import { NetworkSymbol } from '@wallet-types';
+
 const REGTEST_URL = 'https://dev-coinjoin.trezor.io/'; // 'https://coinjoin-dev.sldev.cz/'; // 'http://localhost:8081/';
 
-export const COINJOIN_NETWORKS: Record<string, any> = {
+export const COINJOIN_NETWORKS: Partial<Record<NetworkSymbol, any>> = {
     regtest: {
         network: 'regtest',
         coordinatorName: 'CoinJoinCoordinatorIdentifier',

@@ -155,7 +155,7 @@ export const UserContextModal = ({
         case 'access-coinjoin-account':
             return (
                 <AccessCoinjoinAccount
-                    network={payload.network}
+                    networkSymbol={payload.networkSymbol}
                     decision={payload.decision}
                     onCancel={onCancel}
                 />
